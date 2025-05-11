@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: write  # for Git to git push
       pull-requests: write  # for Git to create PR
+      issues: write
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,4 +46,5 @@ jobs:
         git remote set-url upstream --push DISABLE
         bash hack/update_upstream.sh
       env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
