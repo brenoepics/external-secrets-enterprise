@@ -262,6 +262,10 @@ func (s *ServerHandler) generateSecret(ctx context.Context, generatorName, gener
 	if generator == nil {
 		return nil, errors.New("generator not found")
 	}
+	// TODO[gusfcarvalho]: Generator State is currently IGNORED.
+	// Meaning, we cannot trigger any API to delete the generated information so far
+	// We need to get the Generator State and be sure to create / update it.
+	// And then add another endpoint to trigger a reconcile of it.
 	data, _, err := generator.Generate(ctx, obj, s.reconciler.Client, namespace)
 	if err != nil {
 		return nil, err
