@@ -56,4 +56,5 @@ jobs:
         git push origin $BRANCH
         gh pr create -B ${{ matrix.branch }} -H ${BRANCH} --title 'chore: update dependencies' --body 'Update dependencies'
       env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
