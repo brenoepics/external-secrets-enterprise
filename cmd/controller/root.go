@@ -248,13 +248,9 @@ var rootCmd = &cobra.Command{
 			RequeueInterval:           time.Hour,
 			ClusterSecretStoreEnabled: enableClusterStoreReconciler,
 			EnableFloodGate:           enableFloodGate,
-<<<<<<< HEAD
+			EnableGeneratorState:      enableGeneratorState,
 		}
 		if err = externalSecretReconciler.SetupWithManager(mgr, controller.Options{
-=======
-			EnableGeneratorState:      enableGeneratorState,
-		}).SetupWithManager(mgr, controller.Options{
->>>>>>> upstream/main
 			MaxConcurrentReconciles: concurrent,
 			RateLimiter:             ctrlcommon.BuildRateLimiter(),
 		}); err != nil {
