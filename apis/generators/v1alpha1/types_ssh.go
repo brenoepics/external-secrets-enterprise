@@ -20,7 +20,7 @@ import (
 
 // PasswordSpec controls the behavior of the password generator.
 type SSHSpec struct {
-	// Bits size of the SSh Key to be generated.
+	// Bit size of the SSH Key to be generated.
 	// Defaults to 4096
 	// +kubebuilder:default=4096
 	Bits int `json:"bits"`
