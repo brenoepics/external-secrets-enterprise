@@ -23,21 +23,22 @@ import (
 type Generator struct{}
 
 const (
-	defaultBits = 4096
+	defaultKeyType = genv1alpha1.SSHKeyTypeRSA
+	defaultBits    = 4096
 
 	errNoSpec    = "no config spec provided"
 	errParseSpec = "unable to parse spec: %w"
 	errGetToken  = "unable to get authorization token: %w"
 )
 
-type generateFunc func(
+type RSAGenerateFunc func(
 	bits int,
 ) (string, string, error)
 
 func (g *Generator) Generate(_ context.Context, jsonSpec *apiextensions.JSON, _ client.Client, _ string) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	return g.generate(
 		jsonSpec,
-		generateSSH,
+		generateRSA,
 	)
 }
 
@@ -45,7 +46,7 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
-func (g *Generator) generate(jsonSpec *apiextensions.JSON, sshGen generateFunc) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
+func (g *Generator) generate(jsonSpec *apiextensions.JSON, rsaGen RSAGenerateFunc) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	if jsonSpec == nil {
 		return nil, nil, errors.New(errNoSpec)
 	}
@@ -53,22 +54,31 @@ func (g *Generator) generate(jsonSpec *apiextensions.JSON, sshGen generateFunc) 
 	if err != nil {
 		return nil, nil, fmt.Errorf(errParseSpec, err)
 	}
-	bits := defaultBits
-	if res.Spec.Bits > 0 {
-		bits = res.Spec.Bits
+
+	keyType := defaultKeyType
+	if res.Spec.KeyType != "" {
+		keyType = res.Spec.KeyType
 	}
 
-	privPEM, pubKey, err := sshGen(bits)
-	if err != nil {
-		return nil, nil, err
+	if keyType == genv1alpha1.SSHKeyTypeRSA {
+		bits := defaultBits
+		if res.Spec.RSAConfig.Bits > 0 {
+			bits = res.Spec.RSAConfig.Bits
+		}
+
+		privPEM, pubKey, err := rsaGen(bits)
+		if err != nil {
+			return nil, nil, err
+		}
+		return map[string][]byte{
+			"id_rsa":     []byte(privPEM),
+			"id_rsa.pub": []byte(pubKey),
+		}, nil, nil
 	}
-	return map[string][]byte{
-		"id_rsa":     []byte(privPEM),
-		"id_rsa.pub": []byte(pubKey),
-	}, nil, nil
+	return nil, nil, fmt.Errorf("unsupported key type: %s", res.Spec.KeyType)
 }
 
-func generateSSH(
+func generateRSA(
 	bits int,
 ) (string, string, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)

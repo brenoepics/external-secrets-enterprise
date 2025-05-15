@@ -14,7 +14,7 @@ import (
 func TestGenerate(t *testing.T) {
 	type args struct {
 		jsonSpec *apiextensions.JSON
-		sshGen   generateFunc
+		rsaGen   RSAGenerateFunc
 	}
 	tests := []struct {
 		name    string
@@ -45,7 +45,7 @@ func TestGenerate(t *testing.T) {
 				jsonSpec: &apiextensions.JSON{
 					Raw: []byte(`{}`),
 				},
-				sshGen: func(bits int) (string, string, error) {
+				rsaGen: func(bits int) (string, string, error) {
 					assert.Equal(t, defaultBits, bits)
 					return "foo", "bar", nil
 				},
@@ -60,9 +60,9 @@ func TestGenerate(t *testing.T) {
 			name: "spec should override defaults",
 			args: args{
 				jsonSpec: &apiextensions.JSON{
-					Raw: []byte(`{"spec":{"bits":2048}}`),
+					Raw: []byte(`{"spec":{"keyType":"RSA","rsaConfig":{"bits":2048}}}`),
 				},
-				sshGen: func(bits int) (string, string, error) {
+				rsaGen: func(bits int) (string, string, error) {
 					assert.Equal(t, 2048, bits)
 					return "foo", "bar", nil
 				},
@@ -74,12 +74,24 @@ func TestGenerate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "invalid key type should result in error",
+			args: args{
+				jsonSpec: &apiextensions.JSON{
+					Raw: []byte(`{"spec":{"keyType":"FOO"}}`),
+				},
+				rsaGen: func(bits int) (string, string, error) {
+					return "", "", nil
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "generator error should be returned",
 			args: args{
 				jsonSpec: &apiextensions.JSON{
 					Raw: []byte(`{}`),
 				},
-				sshGen: func(bits int) (string, string, error) {
+				rsaGen: func(bits int) (string, string, error) {
 					return "", "", errors.New("boom")
 				},
 			},
@@ -89,7 +101,7 @@ func TestGenerate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &Generator{}
-			got, _, err := g.generate(tt.args.jsonSpec, tt.args.sshGen)
+			got, _, err := g.generate(tt.args.jsonSpec, tt.args.rsaGen)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Generator.Generate() error = %v, wantErr %v", err, tt.wantErr)
 				return

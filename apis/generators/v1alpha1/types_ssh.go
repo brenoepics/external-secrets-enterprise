@@ -18,9 +18,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PasswordSpec controls the behavior of the password generator.
+// +kubebuilder:validation:Enum=RSA
+type SSHKeyType string
+
+const (
+	SSHKeyTypeRSA SSHKeyType = "RSA"
+)
+
+// SSHSpec controls the behavior of the password generator.
 type SSHSpec struct {
-	// Bit size of the SSH Key to be generated.
+	// KeyType specifies the SSH key type to be generated.
+	// Currently only RSA is supported.
+	// +kubebuilder:default="RSA"
+	KeyType SSHKeyType `json:"keyType,omitempty"`
+
+	// RSAConfig specifies the configuration of the RSA key to be generated.
+	RSAConfig RSASpec `json:"rsaConfig,omitempty"`
+}
+
+// RSASpec controls the behavior of the password generator.
+type RSASpec struct {
+	// Bit size of the RSA Key to be generated.
 	// Defaults to 4096
 	// +kubebuilder:default=4096
 	Bits int `json:"bits"`
