@@ -25,6 +25,8 @@ type Neo4jSpec struct {
 	// URI is the connection URI for the Neo4j database.
 	// Example: bolt://neo4j.default.svc.cluster.local:7687
 	URI string `json:"uri"`
+	// User is the data of the user to be created.
+	User *Neo4jUser `json:"user,omitempty"`
 }
 
 type Neo4jAuth struct {
@@ -48,12 +50,37 @@ type Neo4jBearerAuth struct {
 	Token SecretKeySelector `json:"token"`
 }
 
+type Neo4jAuthProvider string
+
+const (
+	Neo4jAuthProviderNative Neo4jAuthProvider = "native"
+)
+
 type Neo4jUser struct {
-	User                   string   `json:"user"`
-	Roles                  []string `json:"roles"`
-	PasswordChangeRequired bool     `json:"passwordChangeRequired"`
-	Suspended              bool     `json:"suspended"`
-	Home                   string   `json:"home"`
+	// The name of the user to be created.
+	User string `json:"user"`
+	// The roles to be assigned to the user.
+	// See https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/
+	// for a list of built-in roles.
+	Roles []string `json:"roles"`
+	// Set PasswordChangeRequired to true to force the user to change their password on next login.
+	PasswordChangeRequired bool `json:"passwordChangeRequired"`
+	// Set Suspended to true to create a suspended user.
+	Suspended *bool `json:"suspended,omitempty"`
+
+	Home *string `json:"home,omitempty"`
+	// The auth provider to be used for the user.
+	// Currently only "native" is supported.
+	// +kubebuilder:validation:Enum=native
+	// +kubebuilder:default=native
+	Provider Neo4jAuthProvider `json:"provider"`
+	// The auth provider configuration.
+	Auth map[string]interface{} `json:"-"`
+}
+
+type Neo4jNativeAuth struct {
+	Password       string `json:"password"`
+	ChangeRequired bool   `json:"changeRequired"`
 }
 
 // Neo4j generates a random neo4j based on the
