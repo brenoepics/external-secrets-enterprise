@@ -26,6 +26,7 @@ type Generator struct{}
 
 const (
 	defaultDatabase = "neo4j"
+	defaultProvider = genv1alpha1.Neo4jAuthProviderNative
 )
 
 func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, kube client.Client, namespace string) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
@@ -52,6 +53,10 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 
 	if res.Spec.Database == "" {
 		res.Spec.Database = defaultDatabase
+	}
+
+	if res.Spec.User.Provider == "" {
+		res.Spec.User.Provider = defaultProvider
 	}
 
 	user, err := createOrReplaceUser(ctx, driver, res)
@@ -225,7 +230,10 @@ func addRolesToUser(ctx context.Context, driver neo4j.DriverWithContext, spec *g
 
 	for _, role := range spec.Spec.User.Roles {
 		if !slices.Contains(existingRoles, role) {
-			createBasicRole(ctx, driver, spec.Spec.Database, role)
+			err = createBasicRole(ctx, driver, spec.Spec.Database, role)
+			if err != nil {
+				return fmt.Errorf("failed to create role %s: %w", role, err)
+			}
 		}
 	}
 
@@ -250,7 +258,7 @@ func dropUser(ctx context.Context, driver neo4j.DriverWithContext, username stri
 	return nil
 }
 
-func createBasicRole(ctx context.Context, driver neo4j.DriverWithContext, dbName string, roleName string) error {
+func createBasicRole(ctx context.Context, driver neo4j.DriverWithContext, dbName, roleName string) error {
 	query := fmt.Sprintf("CREATE ROLE %s IF NOT EXISTS AS COPY OF PUBLIC", roleName)
 	_, err := neo4j.ExecuteQuery(ctx, driver,
 		query, map[string]any{},

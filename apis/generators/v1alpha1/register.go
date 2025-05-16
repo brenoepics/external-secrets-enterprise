@@ -50,7 +50,6 @@ var (
 	UUIDKind                  = reflect.TypeOf(UUID{}).Name()
 	GrafanaKind               = reflect.TypeOf(Grafana{}).Name()
 	ClusterGeneratorKind      = reflect.TypeOf(ClusterGenerator{}).Name()
-	Neo4jKind                 = reflect.TypeOf(Neo4j{}).Name()
 )
 
 func init() {

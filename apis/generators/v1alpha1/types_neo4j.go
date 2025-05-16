@@ -80,8 +80,6 @@ type Neo4jUser struct {
 	// +kubebuilder:validation:Enum=native
 	// +kubebuilder:default=native
 	Provider Neo4jAuthProvider `json:"provider"`
-	// The auth provider configuration.
-	Auth map[string]interface{} `json:"-"`
 }
 
 type Neo4jNativeUser struct {

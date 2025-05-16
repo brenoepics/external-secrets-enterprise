@@ -22,6 +22,7 @@ var (
 	RabbitMQGeneratorKind = reflect.TypeOf(RabbitMQ{}).Name()
 	BasicAuthKind         = reflect.TypeOf(BasicAuth{}).Name()
 	SSHKind               = reflect.TypeOf(SSH{}).Name()
+	Neo4jKind             = reflect.TypeOf(Neo4j{}).Name()
 )
 
 func init() {
