@@ -6,12 +6,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
+	"github.com/labstack/gommon/log"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	genv1alpha1 "github.com/external-secrets/external-secrets/apis/generators/v1alpha1"
@@ -21,6 +23,10 @@ import (
 )
 
 type Generator struct{}
+
+const (
+	defaultDatabase = "neo4j"
+)
 
 func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, kube client.Client, namespace string) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	res, err := parseSpec(jsonSpec.Raw)
@@ -44,13 +50,31 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 		return nil, nil, fmt.Errorf("unable to verify connectivity: %w", err)
 	}
 
+	if res.Spec.Database == "" {
+		res.Spec.Database = defaultDatabase
+	}
+
 	user, err := createOrReplaceUser(ctx, driver, res)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create or replace user: %w", err)
 	}
 
+	err = addRolesToUser(ctx, driver, res)
+	if err != nil {
+		dropErr := dropUser(ctx, driver, res.Spec.User.User)
+		if dropErr != nil {
+			return nil, nil, fmt.Errorf("unable to drop user: %w", dropErr)
+		}
+		return nil, nil, fmt.Errorf("unable to add roles to user: %w", err)
+	}
+
+	username, ok := user["user"]
+	if !ok {
+		return nil, nil, fmt.Errorf("user not found in response")
+	}
+
 	rawState, err := json.Marshal(&genv1alpha1.Neo4jUserState{
-		User: res.Spec.User.User,
+		User: string(username),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to marshal state: %w", err)
@@ -87,10 +111,9 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, p
 		return fmt.Errorf("unable to verify connectivity: %w", err)
 	}
 
-	query := fmt.Sprintf("DROP USER %s IF EXISTS", status.User)
-	_, err = neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer)
+	err = dropUser(ctx, driver, status.User)
 	if err != nil {
-		return fmt.Errorf("failed to drop user: %w", err)
+		return fmt.Errorf("unable to drop user: %w", err)
 	}
 
 	return nil
@@ -158,21 +181,86 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 		} else {
 			query.WriteString("\tSET PASSWORD CHANGE NOT REQUIRED\n")
 		}
+
+		_, err = neo4j.ExecuteQuery(ctx, driver,
+			query.String(), map[string]any{},
+			neo4j.EagerResultTransformer,
+			neo4j.ExecuteQueryWithDatabase(spec.Spec.Database),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return map[string][]byte{
+			"user":     []byte(spec.Spec.User.User),
+			"password": pass,
+		}, nil
+	}
+	return nil, fmt.Errorf("unsupported auth provider: %s", spec.Spec.User.Provider)
+}
+
+func addRolesToUser(ctx context.Context, driver neo4j.DriverWithContext, spec *genv1alpha1.Neo4j) error {
+	if len(spec.Spec.User.Roles) == 0 {
+		return nil
 	}
 
-	_, err := neo4j.ExecuteQuery(ctx, driver,
-		query.String(), map[string]any{},
+	existingRoles := make([]string, 0)
+	result, err := neo4j.ExecuteQuery(ctx, driver,
+		"SHOW ALL ROLES", map[string]any{},
 		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("neo4j"),
+		neo4j.ExecuteQueryWithDatabase(spec.Spec.Database),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return map[string][]byte{
-		"user":     []byte(spec.Spec.User.User),
-		"passowrd": []byte("abcd1234"),
-	}, nil
+	for _, record := range result.Records {
+		roleName, ok := record.AsMap()["role"].(string)
+		if !ok {
+			log.Errorf("failed to get role name from record %v", record)
+			continue
+		}
+		existingRoles = append(existingRoles, roleName)
+	}
+
+	for _, role := range spec.Spec.User.Roles {
+		if !slices.Contains(existingRoles, role) {
+			createBasicRole(ctx, driver, spec.Spec.Database, role)
+		}
+	}
+
+	query := fmt.Sprintf("GRANT ROLE %s TO %s", strings.Join(spec.Spec.User.Roles, ", "), spec.Spec.User.User)
+	_, err = neo4j.ExecuteQuery(ctx, driver,
+		query, map[string]any{},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(spec.Spec.Database),
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func dropUser(ctx context.Context, driver neo4j.DriverWithContext, username string) error {
+	query := fmt.Sprintf("DROP USER %s IF EXISTS", username)
+	_, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createBasicRole(ctx context.Context, driver neo4j.DriverWithContext, dbName string, roleName string) error {
+	query := fmt.Sprintf("CREATE ROLE %s IF NOT EXISTS AS COPY OF PUBLIC", roleName)
+	_, err := neo4j.ExecuteQuery(ctx, driver,
+		query, map[string]any{},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(dbName),
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func generatePassword(

@@ -20,6 +20,10 @@ import (
 
 // Neo4jSpec controls the behavior of the neo4j generator.
 type Neo4jSpec struct {
+	// Database is the name of the database to connect to.
+	// If not specified, the "neo4j" database will be used.
+	// +kubebuilder:default=neo4j
+	Database string `json:"database"`
 	// Auth contains the credentials or auth configuration
 	Auth Neo4jAuth `json:"auth"`
 	// User is the data of the user to be created.
@@ -62,6 +66,8 @@ type Neo4jUser struct {
 	// The roles to be assigned to the user.
 	// See https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/
 	// for a list of built-in roles.
+	// If contains non-existing roles, they will be created as copy of "PUBLIC" role.
+	// If empty, the user will be created with no role.
 	Roles []string `json:"roles"`
 	// Set PasswordChangeRequired to true to force the user to change their password on next login.
 	PasswordChangeRequired bool `json:"passwordChangeRequired"`
@@ -76,6 +82,11 @@ type Neo4jUser struct {
 	Provider Neo4jAuthProvider `json:"provider"`
 	// The auth provider configuration.
 	Auth map[string]interface{} `json:"-"`
+}
+
+type Neo4jNativeUser struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
 
 type Neo4jUserState struct {
