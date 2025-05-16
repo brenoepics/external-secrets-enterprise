@@ -22,14 +22,14 @@ import (
 type Neo4jSpec struct {
 	// Auth contains the credentials or auth configuration
 	Auth Neo4jAuth `json:"auth"`
-	// URI is the connection URI for the Neo4j database.
-	// Example: bolt://neo4j.default.svc.cluster.local:7687
-	URI string `json:"uri"`
 	// User is the data of the user to be created.
 	User *Neo4jUser `json:"user,omitempty"`
 }
 
 type Neo4jAuth struct {
+	// URI is the connection URI for the Neo4j database.
+	// Example: bolt://neo4j.default.svc.cluster.local:7687
+	URI string `json:"uri"`
 	// Basic auth credentials used to authenticate against the Neo4j instance.
 	// +optional
 	Basic *Neo4jBasicAuth `json:"basic,omitempty"`
@@ -78,9 +78,8 @@ type Neo4jUser struct {
 	Auth map[string]interface{} `json:"-"`
 }
 
-type Neo4jNativeAuth struct {
-	Password       string `json:"password"`
-	ChangeRequired bool   `json:"changeRequired"`
+type Neo4jUserState struct {
+	User string `json:"user"`
 }
 
 // Neo4j generates a random neo4j based on the

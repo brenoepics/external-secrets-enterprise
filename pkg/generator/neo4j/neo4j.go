@@ -1,3 +1,5 @@
+// Copyright External Secrets Inc. All Rights Reserved
+
 package neo4j
 
 import (
@@ -26,28 +28,20 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 		return nil, nil, err
 	}
 
-	driver, err := newDriver(ctx, res, kube, namespace)
+	driver, err := newDriver(ctx, &res.Spec.Auth, kube, namespace)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create driver: %w", err)
 	}
-	defer driver.Close(ctx)
+	defer func() {
+		err := driver.Close(ctx)
+		if err != nil {
+			fmt.Printf("failed to close driver: %v", err)
+		}
+	}()
 
 	err = driver.VerifyConnectivity(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to verify connectivity: %w", err)
-	}
-
-	state, err := getUser(ctx, driver, res)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get user: %w", err)
-	}
-
-	var rawState []byte
-	if state != nil {
-		rawState, err = json.Marshal(state)
-		if err != nil {
-			return nil, nil, fmt.Errorf("unable to marshal state: %w", err)
-		}
 	}
 
 	user, err := createOrReplaceUser(ctx, driver, res)
@@ -55,33 +49,72 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 		return nil, nil, fmt.Errorf("unable to create or replace user: %w", err)
 	}
 
+	rawState, err := json.Marshal(&genv1alpha1.Neo4jUserState{
+		User: res.Spec.User.User,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to marshal state: %w", err)
+	}
+
 	return user, &apiextensions.JSON{Raw: rawState}, nil
 }
 
-func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, state genv1alpha1.GeneratorProviderState, kclient client.Client, namespace string) error {
+func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, previousStatus genv1alpha1.GeneratorProviderState, kclient client.Client, namespace string) error {
+	if previousStatus == nil {
+		return fmt.Errorf("missing previous status")
+	}
+	status, err := parseStatus(previousStatus.Raw)
+	if err != nil {
+		return err
+	}
+	res, err := parseSpec(jsonSpec.Raw)
+	if err != nil {
+		return err
+	}
+	driver, err := newDriver(ctx, &res.Spec.Auth, kclient, namespace)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err := driver.Close(ctx)
+		if err != nil {
+			fmt.Printf("failed to close driver: %v", err)
+		}
+	}()
+
+	err = driver.VerifyConnectivity(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to verify connectivity: %w", err)
+	}
+
+	query := fmt.Sprintf("DROP USER %s IF EXISTS", status.User)
+	_, err = neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer)
+	if err != nil {
+		return fmt.Errorf("failed to drop user: %w", err)
+	}
+
 	return nil
 }
 
-func newDriver(ctx context.Context, spec *genv1alpha1.Neo4j, kclient client.Client, ns string) (neo4j.DriverWithContext, error) {
-	// URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
-	dbUri := spec.Spec.URI
+func newDriver(ctx context.Context, auth *genv1alpha1.Neo4jAuth, kclient client.Client, ns string) (neo4j.DriverWithContext, error) {
+	dbUri := auth.URI
 	var authToken neo4j.AuthToken
-	if spec.Spec.Auth.Bearer != nil {
+	if auth.Bearer != nil {
 		bearerToken, err := resolvers.SecretKeyRef(ctx, kclient, resolvers.EmptyStoreKind, ns, &esmeta.SecretKeySelector{
 			Namespace: &ns,
-			Name:      spec.Spec.Auth.Bearer.Token.Name,
-			Key:       spec.Spec.Auth.Bearer.Token.Key,
+			Name:      auth.Bearer.Token.Name,
+			Key:       auth.Bearer.Token.Key,
 		})
 		if err != nil {
 			return nil, err
 		}
 		authToken = neo4j.BearerAuth(bearerToken)
-	} else if spec.Spec.Auth.Basic != nil {
-		dbUser := spec.Spec.Auth.Basic.Username
+	} else if auth.Basic != nil {
+		dbUser := auth.Basic.Username
 		dbPassword, err := resolvers.SecretKeyRef(ctx, kclient, resolvers.EmptyStoreKind, ns, &esmeta.SecretKeySelector{
 			Namespace: &ns,
-			Name:      spec.Spec.Auth.Basic.Password.Name,
-			Key:       spec.Spec.Auth.Basic.Password.Key,
+			Name:      auth.Basic.Password.Name,
+			Key:       auth.Basic.Password.Key,
 		})
 		if err != nil {
 			return nil, err
@@ -93,38 +126,6 @@ func newDriver(ctx context.Context, spec *genv1alpha1.Neo4j, kclient client.Clie
 		dbUri,
 		authToken,
 	)
-}
-
-func getUser(ctx context.Context, driver neo4j.DriverWithContext, spec *genv1alpha1.Neo4j) (*genv1alpha1.Neo4jUser, error) {
-	result, err := neo4j.ExecuteQuery(ctx, driver,
-		"SHOW USERS WITH AUTH", map[string]any{},
-		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("neo4j"),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute query: %w", err)
-	}
-
-	var user *genv1alpha1.Neo4jUser
-	// Loop through results and do something with them
-	for _, record := range result.Records {
-		recordMap := record.AsMap()
-		name, ok := recordMap["name"].(string)
-		if !ok || name != spec.Spec.User.User {
-			continue
-		}
-
-		user, err = ParseNeo4jUser(*record)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse user: %w", err)
-		}
-	}
-
-	if user == nil {
-		return nil, fmt.Errorf("user not found: %s", spec.Spec.User.User)
-	}
-
-	return user, nil
 }
 
 func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, spec *genv1alpha1.Neo4j) (map[string][]byte, error) {
@@ -169,7 +170,7 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 	}
 
 	return map[string][]byte{
-		"name":     []byte(spec.Spec.User.User),
+		"user":     []byte(spec.Spec.User.User),
 		"passowrd": []byte("abcd1234"),
 	}, nil
 }
@@ -195,62 +196,19 @@ func generatePassword(
 	return pass, nil
 }
 
-func ParseNeo4jUser(record neo4j.Record) (*genv1alpha1.Neo4jUser, error) {
-	m := record.AsMap()
-
-	// Required fields
-	name, ok := m["name"].(string)
-	if !ok {
-		return nil, fmt.Errorf("field 'name' is missing or not a string")
-	}
-
-	providerStr, ok := m["provider"].(string)
-	if !ok {
-		return nil, fmt.Errorf("field 'provider' is missing or not a string")
-	}
-
-	// Optional fields
-	var roles []string
-	if rawRoles, ok := m["roles"].([]interface{}); ok {
-		roles = make([]string, len(rawRoles))
-		for i, r := range rawRoles {
-			if str, ok := r.(string); ok {
-				roles[i] = str
-			}
-		}
-	}
-
-	var homePtr *string
-	if home, ok := m["home"].(string); ok {
-		homePtr = &home
-	}
-
-	var suspendedPtr *bool
-	if suspended, ok := m["suspended"].(bool); ok {
-		suspendedPtr = &suspended
-	}
-	passwordChangeRequired, _ := m["passwordChangeRequired"].(bool)
-
-	var auth map[string]interface{}
-	if rawAuth, ok := m["auth"].(map[string]interface{}); ok {
-		auth = rawAuth
-	}
-
-	return &genv1alpha1.Neo4jUser{
-		User:                   name,
-		Roles:                  roles,
-		Suspended:              suspendedPtr,
-		PasswordChangeRequired: passwordChangeRequired,
-		Home:                   homePtr,
-		Provider:               genv1alpha1.Neo4jAuthProvider(providerStr),
-		Auth:                   auth,
-	}, nil
-}
-
 func parseSpec(data []byte) (*genv1alpha1.Neo4j, error) {
 	var spec genv1alpha1.Neo4j
 	err := yaml.Unmarshal(data, &spec)
 	return &spec, err
+}
+
+func parseStatus(data []byte) (*genv1alpha1.Neo4jUserState, error) {
+	var state genv1alpha1.Neo4jUserState
+	err := json.Unmarshal(data, &state)
+	if err != nil {
+		return nil, err
+	}
+	return &state, err
 }
 
 func init() {
