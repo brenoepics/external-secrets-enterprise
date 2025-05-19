@@ -4,8 +4,10 @@ package neo4j
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"slices"
 	"strings"
 
@@ -33,6 +35,10 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 	res, err := parseSpec(jsonSpec.Raw)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if strings.Contains(res.Spec.User.User, "-") {
+		return nil, nil, fmt.Errorf("invalid username %q: must not contain dashes (-)", res.Spec.User.User)
 	}
 
 	driver, err := newDriver(ctx, &res.Spec.Auth, kube, namespace)
@@ -64,13 +70,15 @@ func (g *Generator) Generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 		return nil, nil, fmt.Errorf("unable to create or replace user: %w", err)
 	}
 
-	err = addRolesToUser(ctx, driver, res)
-	if err != nil {
-		dropErr := dropUser(ctx, driver, res.Spec.User.User)
-		if dropErr != nil {
-			return nil, nil, fmt.Errorf("unable to drop user: %w", dropErr)
+	if res.Spec.Enterprise {
+		err = addRolesToUser(ctx, driver, res)
+		if err != nil {
+			dropErr := dropUser(ctx, driver, res.Spec.User.User)
+			if dropErr != nil {
+				return nil, nil, fmt.Errorf("unable to drop user: %w", dropErr)
+			}
+			return nil, nil, fmt.Errorf("unable to add roles to user: %w", err)
 		}
-		return nil, nil, fmt.Errorf("unable to add roles to user: %w", err)
 	}
 
 	username, ok := user["user"]
@@ -158,18 +166,29 @@ func newDriver(ctx context.Context, auth *genv1alpha1.Neo4jAuth, kclient client.
 
 func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, spec *genv1alpha1.Neo4j) (map[string][]byte, error) {
 	var query strings.Builder
-	query.WriteString(fmt.Sprintf("CREATE OR REPLACE USER %s\n", spec.Spec.User.User))
-
-	if spec.Spec.User.Suspended != nil {
-		if *spec.Spec.User.Suspended {
-			query.WriteString("SET STATUS SUSPENDED\n")
-		} else {
-			query.WriteString("SET STATUS ACTIVE\n")
+	username := spec.Spec.User.User
+	if spec.Spec.User.RandomSufix {
+		ioReader := rand.Reader
+		randomNumber, err := rand.Int(ioReader, new(big.Int).SetInt64(10000))
+		if err != nil {
+			return nil, err
 		}
+		username += fmt.Sprintf("%04d", randomNumber)
 	}
 
-	if spec.Spec.User.Home != nil {
-		query.WriteString(fmt.Sprintf("SET HOME DATABASE %s\n", *spec.Spec.User.Home))
+	query.WriteString(fmt.Sprintf("CREATE OR REPLACE USER %s\n", username))
+	if spec.Spec.Enterprise {
+		if spec.Spec.User.Suspended != nil {
+			if *spec.Spec.User.Suspended {
+				query.WriteString("SET STATUS SUSPENDED\n")
+			} else {
+				query.WriteString("SET STATUS ACTIVE\n")
+			}
+		}
+
+		if spec.Spec.User.Home != nil {
+			query.WriteString(fmt.Sprintf("SET HOME DATABASE %s\n", *spec.Spec.User.Home))
+		}
 	}
 
 	query.WriteString(fmt.Sprintf("SET AUTH '%s' {\n", spec.Spec.User.Provider))
@@ -187,6 +206,8 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 			query.WriteString("\tSET PASSWORD CHANGE NOT REQUIRED\n")
 		}
 
+		query.WriteString("}\n")
+
 		_, err = neo4j.ExecuteQuery(ctx, driver,
 			query.String(), map[string]any{},
 			neo4j.EagerResultTransformer,
@@ -197,7 +218,7 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 		}
 
 		return map[string][]byte{
-			"user":     []byte(spec.Spec.User.User),
+			"user":     []byte(username),
 			"password": pass,
 		}, nil
 	}
@@ -211,7 +232,7 @@ func addRolesToUser(ctx context.Context, driver neo4j.DriverWithContext, spec *g
 
 	existingRoles := make([]string, 0)
 	result, err := neo4j.ExecuteQuery(ctx, driver,
-		"SHOW ALL ROLES", map[string]any{},
+		"SHOW ROLES", map[string]any{},
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase(spec.Spec.Database),
 	)

@@ -28,6 +28,9 @@ type Neo4jSpec struct {
 	Auth Neo4jAuth `json:"auth"`
 	// User is the data of the user to be created.
 	User *Neo4jUser `json:"user,omitempty"`
+	// If the neo4j instance is running in enterprise mode.
+	// +kubebuilder:default=false
+	Enterprise bool `json:"enterprise,omitempty"`
 }
 
 type Neo4jAuth struct {
@@ -62,7 +65,12 @@ const (
 
 type Neo4jUser struct {
 	// The name of the user to be created.
+	// Must not contain a dash ("-") character.
+	// +kubebuilder:validation:Pattern=`^[^-\s]+$`
 	User string `json:"user"`
+	// RandomSufix adds a random 4-digits sufix to the user name if enabled.
+	// +kubebuilder:default=false
+	RandomSufix bool `json:"randomSufix,omitempty"`
 	// The roles to be assigned to the user.
 	// See https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/
 	// for a list of built-in roles.
@@ -73,18 +81,13 @@ type Neo4jUser struct {
 	PasswordChangeRequired bool `json:"passwordChangeRequired"`
 	// Set Suspended to true to create a suspended user.
 	Suspended *bool `json:"suspended,omitempty"`
-
+	// The home database of the user.
 	Home *string `json:"home,omitempty"`
 	// The auth provider to be used for the user.
 	// Currently only "native" is supported.
 	// +kubebuilder:validation:Enum=native
 	// +kubebuilder:default=native
 	Provider Neo4jAuthProvider `json:"provider"`
-}
-
-type Neo4jNativeUser struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
 }
 
 type Neo4jUserState struct {

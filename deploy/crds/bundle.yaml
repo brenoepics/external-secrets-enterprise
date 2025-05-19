@@ -24384,10 +24384,15 @@ spec:
                     Database is the name of the database to connect to.
                     If not specified, the "neo4j" database will be used.
                   type: string
+                enterprise:
+                  default: false
+                  description: If the neo4j instance is running in enterprise mode.
+                  type: boolean
                 user:
                   description: User is the data of the user to be created.
                   properties:
                     home:
+                      description: The home database of the user.
                       type: string
                     passwordChangeRequired:
                       description: Set PasswordChangeRequired to true to force the user to change their password on next login.
@@ -24400,6 +24405,10 @@ spec:
                       enum:
                         - native
                       type: string
+                    randomSufix:
+                      default: false
+                      description: RandomSufix adds a random 4-digits sufix to the user name if enabled.
+                      type: boolean
                     roles:
                       description: |-
                         The roles to be assigned to the user.
@@ -24414,7 +24423,10 @@ spec:
                       description: Set Suspended to true to create a suspended user.
                       type: boolean
                     user:
-                      description: The name of the user to be created.
+                      description: |-
+                        The name of the user to be created.
+                        Must not contain a dash ("-") character.
+                      pattern: ^[^-\s]+$
                       type: string
                   required:
                     - passwordChangeRequired
