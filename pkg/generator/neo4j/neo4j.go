@@ -124,9 +124,16 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, p
 		return fmt.Errorf("unable to verify connectivity: %w", err)
 	}
 
-	err = dropUser(ctx, driver, status.User)
-	if err != nil {
-		return fmt.Errorf("unable to drop user: %w", err)
+	if res.Spec.Enterprise {
+		err = suspendUser(ctx, driver, status.User)
+		if err != nil {
+			return fmt.Errorf("unable to suspend user: %w", err)
+		}
+	} else {
+		err = dropUser(ctx, driver, status.User)
+		if err != nil {
+			return fmt.Errorf("unable to drop user: %w", err)
+		}
 	}
 
 	return nil
@@ -177,6 +184,8 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 	}
 
 	query.WriteString(fmt.Sprintf("CREATE OR REPLACE USER %s\n", username))
+
+	authProvider := genv1alpha1.Neo4jAuthProviderNative
 	if spec.Spec.Enterprise {
 		if spec.Spec.User.Suspended != nil {
 			if *spec.Spec.User.Suspended {
@@ -189,11 +198,12 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 		if spec.Spec.User.Home != nil {
 			query.WriteString(fmt.Sprintf("SET HOME DATABASE %s\n", *spec.Spec.User.Home))
 		}
+		authProvider = spec.Spec.User.Provider
 	}
 
-	query.WriteString(fmt.Sprintf("SET AUTH '%s' {\n", spec.Spec.User.Provider))
+	query.WriteString(fmt.Sprintf("SET AUTH '%s' {\n", authProvider))
 
-	if spec.Spec.User.Provider == genv1alpha1.Neo4jAuthProviderNative {
+	if authProvider == genv1alpha1.Neo4jAuthProviderNative {
 		pass, err := generatePassword(genv1alpha1.PasswordSpec{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate password: %w", err)
@@ -272,6 +282,19 @@ func addRolesToUser(ctx context.Context, driver neo4j.DriverWithContext, spec *g
 
 func dropUser(ctx context.Context, driver neo4j.DriverWithContext, username string) error {
 	query := fmt.Sprintf("DROP USER %s IF EXISTS", username)
+	_, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func suspendUser(ctx context.Context, driver neo4j.DriverWithContext, username string) error {
+	query := fmt.Sprintf(
+		`ALTER USER %s IF EXISTS 
+		SET STATUS SUSPENDED`,
+		username,
+	)
 	_, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer)
 	if err != nil {
 		return err
