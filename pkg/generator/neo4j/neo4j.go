@@ -187,14 +187,6 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 
 	authProvider := genv1alpha1.Neo4jAuthProviderNative
 	if spec.Spec.Enterprise {
-		if spec.Spec.User.Suspended != nil {
-			if *spec.Spec.User.Suspended {
-				query.WriteString("SET STATUS SUSPENDED\n")
-			} else {
-				query.WriteString("SET STATUS ACTIVE\n")
-			}
-		}
-
 		if spec.Spec.User.Home != nil {
 			query.WriteString(fmt.Sprintf("SET HOME DATABASE %s\n", *spec.Spec.User.Home))
 		}
@@ -209,13 +201,7 @@ func createOrReplaceUser(ctx context.Context, driver neo4j.DriverWithContext, sp
 			return nil, fmt.Errorf("failed to generate password: %w", err)
 		}
 		query.WriteString(fmt.Sprintf("\tSET PASSWORD '%s'\n", string(pass)))
-
-		if spec.Spec.User.PasswordChangeRequired {
-			query.WriteString("\tSET PASSWORD CHANGE REQUIRED\n")
-		} else {
-			query.WriteString("\tSET PASSWORD CHANGE NOT REQUIRED\n")
-		}
-
+		query.WriteString("\tSET PASSWORD CHANGE NOT REQUIRED\n")
 		query.WriteString("}\n")
 
 		_, err = neo4j.ExecuteQuery(ctx, driver,

@@ -24504,16 +24504,14 @@ spec:
                   description: User is the data of the user to be created.
                   properties:
                     home:
-                      description: The home database of the user.
+                      description: The home database of the user (Neo4j Enterprise only).
                       type: string
-                    passwordChangeRequired:
-                      description: Set PasswordChangeRequired to true to force the user to change their password on next login.
-                      type: boolean
                     provider:
                       default: native
                       description: |-
-                        The auth provider to be used for the user.
+                        The auth provider to be used for the user (Neo4j Enterprise only).
                         Currently only "native" is supported.
+                        "native" provider is used for Neo4j Community
                       enum:
                         - native
                       type: string
@@ -24523,7 +24521,7 @@ spec:
                       type: boolean
                     roles:
                       description: |-
-                        The roles to be assigned to the user.
+                        The roles to be assigned to the user (Neo4j Enterprise only).
                         See https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/
                         for a list of built-in roles.
                         If contains non-existing roles, they will be created as copy of "PUBLIC" role.
@@ -24531,9 +24529,6 @@ spec:
                       items:
                         type: string
                       type: array
-                    suspended:
-                      description: Set Suspended to true to create a suspended user.
-                      type: boolean
                     user:
                       description: |-
                         The name of the user to be created.
@@ -24541,7 +24536,6 @@ spec:
                       pattern: ^[^-\s]+$
                       type: string
                   required:
-                    - passwordChangeRequired
                     - provider
                     - roles
                     - user

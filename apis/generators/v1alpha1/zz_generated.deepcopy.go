@@ -1482,11 +1482,6 @@ func (in *Neo4jUser) DeepCopyInto(out *Neo4jUser) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Suspended != nil {
-		in, out := &in.Suspended, &out.Suspended
-		*out = new(bool)
-		**out = **in
-	}
 	if in.Home != nil {
 		in, out := &in.Home, &out.Home
 		*out = new(string)

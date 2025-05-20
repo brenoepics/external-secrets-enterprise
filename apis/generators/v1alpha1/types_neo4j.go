@@ -71,20 +71,17 @@ type Neo4jUser struct {
 	// RandomSufix adds a random 4-digits sufix to the user name if enabled.
 	// +kubebuilder:default=false
 	RandomSufix bool `json:"randomSufix,omitempty"`
-	// The roles to be assigned to the user.
+	// The roles to be assigned to the user (Neo4j Enterprise only).
 	// See https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/
 	// for a list of built-in roles.
 	// If contains non-existing roles, they will be created as copy of "PUBLIC" role.
 	// If empty, the user will be created with no role.
 	Roles []string `json:"roles"`
-	// Set PasswordChangeRequired to true to force the user to change their password on next login.
-	PasswordChangeRequired bool `json:"passwordChangeRequired"`
-	// Set Suspended to true to create a suspended user.
-	Suspended *bool `json:"suspended,omitempty"`
-	// The home database of the user.
+	// The home database of the user (Neo4j Enterprise only).
 	Home *string `json:"home,omitempty"`
-	// The auth provider to be used for the user.
+	// The auth provider to be used for the user (Neo4j Enterprise only).
 	// Currently only "native" is supported.
+	// "native" provider is used for Neo4j Community
 	// +kubebuilder:validation:Enum=native
 	// +kubebuilder:default=native
 	Provider Neo4jAuthProvider `json:"provider"`
