@@ -233,6 +233,15 @@ docs.publish: generate ## Generate and deploys docs
 docs.serve: ## Serve docs
 	$(MAKE) -C ./hack/api-docs serve
 
+DOCS_VERSION ?= $(VERSION)
+.PHONY: docs.check
+docs.check: ## Check docs
+	$(MAKE) -C ./hack/api-docs check DOCS_VERSION=$(DOCS_VERSION)
+
+.PHONY: docs.update
+docs.update: ## Update docs
+	$(MAKE) -C ./hack/api-docs stability-support.update DOCS_VERSION=$(DOCS_VERSION)
+
 # ====================================================================================
 # Build Artifacts
 
@@ -378,7 +387,7 @@ $(TILT): $(LOCALBIN)
 
 
 ARTIFACT_REG:=us-central1-docker.pkg.dev
-CHARTS_REPO := oci://$(ARTIFACT_REG)/external-secrets-inc-registry/external/charts
+CHARTS_REPO := oci://$(ARTIFACT_REG)/external-secrets-inc-registry/public/charts
 
 .PHONY: helm.login
 helm.login:
