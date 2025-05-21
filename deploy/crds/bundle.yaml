@@ -162,6 +162,7 @@ spec:
                                       - VaultDynamicSecret
                                       - Webhook
                                       - Grafana
+                                      - MFA
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -350,6 +351,7 @@ spec:
                                       - VaultDynamicSecret
                                       - Webhook
                                       - Grafana
+                                      - MFA
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -1725,6 +1727,7 @@ spec:
                                 - VaultDynamicSecret
                                 - Webhook
                                 - Grafana
+                                - MFA
                               type: string
                             name:
                               description: Specify the name of the generator resource
@@ -10853,6 +10856,7 @@ spec:
                                   - VaultDynamicSecret
                                   - Webhook
                                   - Grafana
+                                  - MFA
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -11041,6 +11045,7 @@ spec:
                                   - VaultDynamicSecret
                                   - Webhook
                                   - Grafana
+                                  - MFA
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -12115,6 +12120,7 @@ spec:
                             - VaultDynamicSecret
                             - Webhook
                             - Grafana
+                            - MFA
                           type: string
                         name:
                           description: Specify the name of the generator resource
@@ -22401,6 +22407,51 @@ spec:
                         - serviceAccount
                         - url
                       type: object
+                    mfaSpec:
+                      description: MFASpec controls the behavior of the mfa generator.
+                      properties:
+                        algorithm:
+                          description: Algorithm to use for encoding. Defaults to SHA1 as per the RFC.
+                          type: string
+                        length:
+                          description: Length defines the token length. Defaults to 6 characters.
+                          type: integer
+                        secret:
+                          description: Secret is a secret selector to a secret containing the seed secret to generate the TOTP value from.
+                          properties:
+                            key:
+                              description: |-
+                                A key in the referenced Secret.
+                                Some instances of this field may be defaulted, in others it may be required.
+                              maxLength: 253
+                              minLength: 1
+                              pattern: ^[-._a-zA-Z0-9]+$
+                              type: string
+                            name:
+                              description: The name of the Secret resource being referred to.
+                              maxLength: 253
+                              minLength: 1
+                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                              type: string
+                            namespace:
+                              description: |-
+                                The namespace of the Secret resource being referred to.
+                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                              maxLength: 63
+                              minLength: 1
+                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                              type: string
+                          type: object
+                        timePeriod:
+                          description: TimePeriod defines how long the token can be active. Defaults to 30 seconds.
+                          type: integer
+                        when:
+                          description: When defines a time parameter that can be used to pin the origin time of the generated token.
+                          format: date-time
+                          type: string
+                      required:
+                        - secret
+                      type: object
                     passwordSpec:
                       description: PasswordSpec controls the behavior of the password generator.
                       properties:
@@ -24390,26 +24441,41 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.18.0
   labels:
     external-secrets.io/component: controller
+<<<<<<< HEAD
   name: neo4js.generators.external-secrets.io
+=======
+  name: mfas.generators.external-secrets.io
+>>>>>>> upstream/main
 spec:
   group: generators.external-secrets.io
   names:
     categories:
       - external-secrets
       - external-secrets-generators
+<<<<<<< HEAD
     kind: Neo4j
     listKind: Neo4jList
     plural: neo4js
     singular: neo4j
+=======
+    kind: MFA
+    listKind: MFAList
+    plural: mfas
+    singular: mfa
+>>>>>>> upstream/main
   scope: Namespaced
   versions:
     - name: v1alpha1
       schema:
         openAPIV3Schema:
+<<<<<<< HEAD
           description: |-
             Neo4j generates a random neo4j based on the
             configuration parameters in spec.
             You can specify the length, characterset and other attributes.
+=======
+          description: MFA generates a new TOTP token that is compliant with RFC 6238.
+>>>>>>> upstream/main
           properties:
             apiVersion:
               description: |-
@@ -24429,6 +24495,7 @@ spec:
             metadata:
               type: object
             spec:
+<<<<<<< HEAD
               description: Neo4jSpec controls the behavior of the neo4j generator.
               properties:
                 auth:
@@ -24543,6 +24610,51 @@ spec:
               required:
                 - auth
                 - database
+=======
+              description: MFASpec controls the behavior of the mfa generator.
+              properties:
+                algorithm:
+                  description: Algorithm to use for encoding. Defaults to SHA1 as per the RFC.
+                  type: string
+                length:
+                  description: Length defines the token length. Defaults to 6 characters.
+                  type: integer
+                secret:
+                  description: Secret is a secret selector to a secret containing the seed secret to generate the TOTP value from.
+                  properties:
+                    key:
+                      description: |-
+                        A key in the referenced Secret.
+                        Some instances of this field may be defaulted, in others it may be required.
+                      maxLength: 253
+                      minLength: 1
+                      pattern: ^[-._a-zA-Z0-9]+$
+                      type: string
+                    name:
+                      description: The name of the Secret resource being referred to.
+                      maxLength: 253
+                      minLength: 1
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                      type: string
+                    namespace:
+                      description: |-
+                        The namespace of the Secret resource being referred to.
+                        Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                      maxLength: 63
+                      minLength: 1
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                  type: object
+                timePeriod:
+                  description: TimePeriod defines how long the token can be active. Defaults to 30 seconds.
+                  type: integer
+                when:
+                  description: When defines a time parameter that can be used to pin the origin time of the generated token.
+                  format: date-time
+                  type: string
+              required:
+                - secret
+>>>>>>> upstream/main
               type: object
           type: object
       served: true
