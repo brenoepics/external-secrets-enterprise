@@ -18,12 +18,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"k8s.io/apimachinery/pkg/labels"
 
 	fedv1alpha1 "github.com/external-secrets/external-secrets/apis/federation/v1alpha1"
 	store "github.com/external-secrets/external-secrets/pkg/federation/store"
-	"github.com/labstack/echo/v4"
 )
 
 type ParseRSAPublicKeyTestSuite struct {
@@ -575,7 +576,7 @@ func (s *ProcessRequestTestSuite) TestProcessRequest() {
 			c := tt.setup()
 
 			// Call the function being tested
-			issuer, sub, err := s.server.processRequest(*c)
+			claim, err := s.server.processRequest(*c, []byte("test-ca-cert"))
 
 			// Check results
 			if tt.wantErr {
@@ -585,8 +586,8 @@ func (s *ProcessRequestTestSuite) TestProcessRequest() {
 				}
 			} else {
 				s.Require().NoError(err)
-				s.Equal(tt.wantIssuer, issuer)
-				s.Equal(tt.wantSub, sub)
+				s.Equal(tt.wantIssuer, claim.Issuer)
+				s.Equal(tt.wantSub, claim.Subject)
 			}
 		})
 	}
@@ -617,12 +618,401 @@ func (s *GenerateSecretsTestSuite) TearDownTest() {
 	}
 }
 
+func (s *GenerateSecretsTestSuite) generateTestSATokenWithClaims(claims KubernetesClaims, key interface{}) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // Using HS256 for simplicity with a symmetric key
+	return token.SignedString(key)
+}
+
+func (s *GenerateSecretsTestSuite) TestResourcePopulationFromClaims() {
+	testKey := []byte("test-symmetric-secret-key-for-hs256") // Symmetric key for HS256
+	generatorName := "my-k8s-generator"
+	generatorKind := "VaultGenerator"
+	generatorNamespace := "secure-ns"
+
+	baseClaims := KubernetesClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "https://kubernetes.default.svc.cluster.local",
+			Subject:   "system:serviceaccount:kube-system:replicator",
+			Audience:  jwt.ClaimStrings{"kubernetes.io/serviceaccount"},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		KubernetesIOInner: KubernetesIOInner{
+			Namespace: "kube-system",
+			ServiceAccount: struct {
+				Name string `json:"name"`
+				UID  string `json:"uid"`
+			}{Name: "replicator", UID: "sa-uid-replicator-777"},
+		},
+	}
+
+	tests := []struct {
+		name              string
+		claimModifier     func(claims *KubernetesClaims) // Modifies baseClaims for the test case
+		expectedOwner     string
+		expectPodUID      bool
+		expectedPodUID    string
+		expectedSAUID     string
+		expectedSAName    string
+		expectedIssuer    string
+		expectedNamespace string
+	}{
+		{
+			name: "with pod information in claims",
+			claimModifier: func(claims *KubernetesClaims) {
+				claims.KubernetesIOInner.Pod = &struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: "replicator-pod-xyz123", UID: "pod-uid-replicator-abc987"}
+			},
+			expectedOwner:     "replicator-pod-xyz123",
+			expectPodUID:      true,
+			expectedPodUID:    "pod-uid-replicator-abc987",
+			expectedSAUID:     "sa-uid-replicator-777",
+			expectedSAName:    "replicator",
+			expectedIssuer:    "https://kubernetes.default.svc.cluster.local",
+			expectedNamespace: "kube-system",
+		},
+		{
+			name: "without pod information in claims",
+			claimModifier: func(claims *KubernetesClaims) {
+				// No pod info, baseClaims is already like this
+			},
+			expectedOwner:     "replicator", // Falls back to SA name
+			expectPodUID:      false,
+			expectedSAUID:     "sa-uid-replicator-777",
+			expectedSAName:    "replicator",
+			expectedIssuer:    "https://kubernetes.default.svc.cluster.local",
+			expectedNamespace: "kube-system",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			currentClaims := baseClaims
+			if tt.claimModifier != nil {
+				tt.claimModifier(&currentClaims)
+			}
+
+			tokenString, err := s.generateTestSATokenWithClaims(currentClaims, testKey)
+			s.Require().NoError(err, "Failed to generate test JWT with SA claims")
+
+			// Mock genParseTokenFn on s.server to return a Keyfunc that "validates" our token
+			originalGenParseTokenFn := s.server.genParseTokenFn
+			s.server.genParseTokenFn = func(ctx context.Context, ts string, caCert []byte) func(token *jwt.Token) (interface{}, error) {
+				return func(token *jwt.Token) (interface{}, error) {
+					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+						return nil, fmt.Errorf("unexpected signing method for SA token: %v", token.Header["alg"])
+					}
+					return testKey, nil
+				}
+			}
+			s.T().Cleanup(func() { s.server.genParseTokenFn = originalGenParseTokenFn })
+
+			// Create and provision AuthorizationSpec for this test case
+			authSpec := &fedv1alpha1.AuthorizationSpec{
+				FederationRef: fedv1alpha1.FederationRef{Name: "test-fed-k8s-claims", Kind: "Kubernetes"},
+				Subject:       fedv1alpha1.FederationSubject{Subject: currentClaims.Subject, Issuer: currentClaims.Issuer},
+				AllowedGenerators: []fedv1alpha1.AllowedGenerator{
+					{Name: generatorName, Kind: generatorKind, Namespace: generatorNamespace},
+				},
+			}
+			// Use the Issuer and Subject from the spec for Set, as seen in SetupTest
+			store.Add(authSpec.Subject.Issuer, authSpec)
+			s.T().Cleanup(func() {
+				// Remove using the issuer and spec object, as seen in user's preferred TearDownTest format
+				store.Remove(authSpec.Subject.Issuer, authSpec)
+			})
+
+			var capturedResource *Resource // Variable to capture the resource
+
+			// Mock generateSecretFn on s.server to capture the Resource and perform assertions
+			originalGenerateSecretFn := s.server.generateSecretFn
+			s.server.generateSecretFn = func(ctx context.Context, genName, genKind, genNamespace string, resource *Resource) (map[string]string, error) {
+				s.Require().NotNil(resource, "Resource passed to generateSecretFn was nil")
+				capturedResource = resource // Capture the resource
+				s.Equal(generatorName, genName)
+				s.Equal(generatorKind, genKind)
+				s.Equal(generatorNamespace, genNamespace)
+				return map[string]string{"secretKey": "secretValue"}, nil
+			}
+			s.T().Cleanup(func() { s.server.generateSecretFn = originalGenerateSecretFn })
+
+			// Prepare request and context
+			e := echo.New()
+			// processRequest will bind the body to map[string]string for "ca.crt"
+			reqBody := `{"ca.crt":"test-ca-data-for-sa-token-test"}`
+			req := httptest.NewRequest(http.MethodPost, "/should_not_matter_for_handler_target", strings.NewReader(reqBody))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			req.Header.Set("Authorization", "Bearer "+tokenString)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetParamNames("generatorName", "generatorKind", "generatorNamespace")
+			c.SetParamValues(generatorName, generatorKind, generatorNamespace)
+
+			// Call the handler s.server.generateSecrets
+			err = s.server.generateSecrets(c)
+			s.Require().NoError(err, "s.server.generateSecrets handler returned an unexpected error")
+			s.Require().Equal(http.StatusOK, rec.Code, "Expected HTTP OK status from generateSecrets")
+
+			// Assertions on the capturedResource
+			s.Require().NotNil(capturedResource, "generateSecretFn was not called or resource was not captured")
+			s.Equal(generatorName, capturedResource.Name)
+			s.Equal("KubernetesServiceAccount", capturedResource.AuthMethod)
+			s.Equal(tt.expectedOwner, capturedResource.Owner)
+
+			s.Equal(tt.expectedNamespace, capturedResource.OwnerAttributes["namespace"])
+			s.Equal(tt.expectedIssuer, capturedResource.OwnerAttributes["issuer"])
+			s.Equal(tt.expectedSAUID, capturedResource.OwnerAttributes["serviceaccount-uid"])
+			s.Equal(tt.expectedSAName, capturedResource.OwnerAttributes["service-account-name"])
+
+			if tt.expectPodUID {
+				s.Equal(tt.expectedPodUID, capturedResource.OwnerAttributes["pod-uid"])
+			} else {
+				_, ok := capturedResource.OwnerAttributes["pod-uid"]
+				s.False(ok, "pod-uid should not be present in OwnerAttributes when not in claims")
+			}
+		})
+	}
+}
+
+func (s *GenerateSecretsTestSuite) TestRevokeSelf() {
+	const (
+		testIssuer        = "https://kubernetes.default.svc.cluster.local"
+		testSubject       = "system:serviceaccount:test-ns:test-sa-revoke"
+		testGeneratorNS   = "target-generator-ns-revoke"
+		testGeneratorName = "my-revoke-generator"
+		testGeneratorKind = "VaultGeneratorRevoke"
+		testPodName       = "test-pod-revoke-123"
+		testSAName        = "test-sa-revoke"
+		testCaCertData    = "test-ca-cert-data-for-revoke-self-happy-path"
+	)
+	var testTokenSigningKey = []byte("test-revoke-self-secret-key-happy")
+
+	tc := struct {
+		name                  string
+		setupAuthSpecs        func()
+		jwtClaims             *KubernetesClaims // Using your existing KubernetesClaims struct
+		expectedStatus        int
+		expectDeleteCall      bool
+		deleteParamsValidator func(ns string, lbls labels.Selector)
+	}{
+		name: "successful revocation with pod info",
+		setupAuthSpecs: func() {
+			authSpec := &fedv1alpha1.AuthorizationSpec{
+				FederationRef: fedv1alpha1.FederationRef{Name: "test-fed-revoke-happy", Kind: "Kubernetes"},
+				Subject:       fedv1alpha1.FederationSubject{Subject: testSubject, Issuer: testIssuer},
+				AllowedGenerators: []fedv1alpha1.AllowedGenerator{
+					{Name: testGeneratorName, Kind: testGeneratorKind, Namespace: testGeneratorNS},
+				},
+			}
+			store.Add(testIssuer, authSpec)
+			s.T().Cleanup(func() { store.Remove(testIssuer, authSpec) })
+		},
+		jwtClaims: &KubernetesClaims{
+			RegisteredClaims: jwt.RegisteredClaims{Issuer: testIssuer, Subject: testSubject},
+			KubernetesIOInner: KubernetesIOInner{
+				Namespace: "test-ns", // SA's namespace
+				ServiceAccount: struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testSAName},
+				Pod: &struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testPodName},
+			},
+		},
+		expectedStatus:   http.StatusOK,
+		expectDeleteCall: true,
+		deleteParamsValidator: func(ns string, lbls labels.Selector) {
+			s.Equal(testGeneratorNS, ns)
+			expectedOwnerLabels := labels.Set{
+				"federation.externalsecrets.com/owner":          testPodName,
+				"federation.externalsecrets.com/generator":      testGeneratorName,
+				"federation.externalsecrets.com/generator-kind": testGeneratorKind,
+			}
+			s.Equal(labels.SelectorFromSet(expectedOwnerLabels).String(), lbls.String())
+		},
+	}
+
+	s.Run(tc.name, func() {
+		// Setup: AuthSpecs in store
+		tc.setupAuthSpecs()
+
+		// Mock genParseTokenFn to handle HS256 for this test
+		originalGenParseTokenFn := s.server.genParseTokenFn
+		s.server.genParseTokenFn = func(ctx context.Context, onlyTokenValue string, caCrtValue []byte) func(token *jwt.Token) (interface{}, error) {
+			return func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); ok {
+					// testTokenSigningKey is defined at the top of TestRevokeSelf (table-driven test)
+					return testTokenSigningKey, nil
+				}
+				// Fallback to original if not HMAC, or error, depending on test needs.
+				if originalGenParseTokenFn != nil {
+					return originalGenParseTokenFn(ctx, onlyTokenValue, caCrtValue)(token)
+				}
+				return nil, fmt.Errorf("test: unexpected signing method: %v and no original parser available", token.Header["alg"])
+			}
+		}
+		s.T().Cleanup(func() { s.server.genParseTokenFn = originalGenParseTokenFn })
+
+		// Generate HS256 token that processRequest can validate
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, tc.jwtClaims)
+		tokenString, err := token.SignedString(testTokenSigningKey)
+		s.Require().NoError(err, "Failed to sign test token")
+
+		// Setup: Mock deleteGeneratorStateFn (ONLY this is mocked for revokeSelf internals)
+		var deleteCalled bool
+		var capturedDeleteNamespace string
+		var capturedDeleteLabels labels.Selector
+		originalDeleteFn := s.server.deleteGeneratorStateFn
+		s.server.deleteGeneratorStateFn = func(ctx context.Context, namespace string, lbls labels.Selector) error {
+			deleteCalled = true
+			capturedDeleteNamespace = namespace
+			capturedDeleteLabels = lbls
+			return nil // Success for happy path
+		}
+		s.T().Cleanup(func() { s.server.deleteGeneratorStateFn = originalDeleteFn })
+
+		// Prepare Echo context
+		e := echo.New()
+		// ca.crt in body is needed for processRequest to extract it for its jwtKeyFunc logic, even if hs256Key is set.
+		reqBody := fmt.Sprintf(`{"ca.crt":%q}`, testCaCertData)
+		req := httptest.NewRequest(http.MethodDelete, "/test/revoke", strings.NewReader(reqBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", "Bearer "+tokenString)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetParamNames("generatorNamespace", "generatorName", "generatorKind")
+		c.SetParamValues(testGeneratorNS, testGeneratorName, testGeneratorKind)
+
+		// Call the handler (revokeSelf)
+		handlerErr := s.server.revokeSelf(c) // processRequest is called internally and is NOT mocked
+		s.Require().NoError(handlerErr, "Handler invocation itself should not error out")
+
+		// Assertions
+		s.Equal(tc.expectedStatus, rec.Code)
+		s.Equal(tc.expectDeleteCall, deleteCalled, "deleteGeneratorStateFn call expectation mismatch")
+
+		if tc.expectDeleteCall && tc.deleteParamsValidator != nil {
+			tc.deleteParamsValidator(capturedDeleteNamespace, capturedDeleteLabels)
+		}
+	})
+}
+
+func (s *GenerateSecretsTestSuite) TestRevokeSelfHappyPath() {
+	const (
+		testIssuer        = "https://kubernetes.default.svc.cluster.local/revoke-self-happy"
+		testSubject       = "system:serviceaccount:test-ns:test-sa-revoke-happy"
+		testGeneratorNS   = "target-generator-ns-revoke-happy"
+		testGeneratorName = "my-revoke-generator-happy"
+		testGeneratorKind = "VaultGeneratorRevokeHappy"
+		testPodName       = "test-pod-revoke-happy-123"
+		testSAName        = "test-sa-revoke-happy"
+		testCaCertData    = "test-ca-cert-data-for-revoke-self-happy-path"
+	)
+	var testTokenSigningKey = []byte("test-revoke-self-secret-key-hs256-happy")
+
+	s.Run("successful revocation with pod info", func() {
+		// 1. Setup AuthorizationSpec in store
+		authSpec := &fedv1alpha1.AuthorizationSpec{
+			FederationRef: fedv1alpha1.FederationRef{Name: "test-fed-revoke-happy-path", Kind: "Kubernetes"},
+			Subject:       fedv1alpha1.FederationSubject{Subject: testSubject, Issuer: testIssuer},
+			AllowedGenerators: []fedv1alpha1.AllowedGenerator{
+				{Name: testGeneratorName, Kind: testGeneratorKind, Namespace: testGeneratorNS},
+			},
+		}
+		store.Add(testIssuer, authSpec)
+		s.T().Cleanup(func() { store.Remove(testIssuer, authSpec) })
+
+		// 2. Mock genParseTokenFn to handle HS256 for this test
+		originalGenParseTokenFn := s.server.genParseTokenFn
+		s.server.genParseTokenFn = func(ctx context.Context, onlyTokenValue string, caCrtValue []byte) func(token *jwt.Token) (interface{}, error) {
+			return func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); ok {
+					// testTokenSigningKey is defined at the top of TestRevokeSelfHappyPath
+					return testTokenSigningKey, nil
+				}
+				// Fallback for safety, though this test specifically uses HS256
+				if originalGenParseTokenFn != nil {
+					return originalGenParseTokenFn(ctx, onlyTokenValue, caCrtValue)(token)
+				}
+				return nil, fmt.Errorf("test: unexpected signing method: %v and no original parser available", token.Header["alg"])
+			}
+		}
+		s.T().Cleanup(func() { s.server.genParseTokenFn = originalGenParseTokenFn })
+
+		// 3. Prepare JWT Claims and generate HS256 token
+		claims := &KubernetesClaims{ // Assuming KubernetesClaims struct is defined in this file/package
+			RegisteredClaims: jwt.RegisteredClaims{Issuer: testIssuer, Subject: testSubject},
+			KubernetesIOInner: KubernetesIOInner{
+				Namespace: "test-ns", // SA's namespace
+				ServiceAccount: struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testSAName, UID: "sa-uid-revoke-happy"},
+				Pod: &struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testPodName, UID: "pod-uid-revoke-happy"},
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString(testTokenSigningKey)
+		s.Require().NoError(err, "Failed to sign test token for revokeSelf")
+
+		// 4. Mock deleteGeneratorStateFn (ONLY this is mocked for revokeSelf internals)
+		var deleteCalled bool
+		var capturedDeleteNamespace string
+		var capturedDeleteLabels labels.Selector
+		originalDeleteFn := s.server.deleteGeneratorStateFn
+		s.server.deleteGeneratorStateFn = func(ctx context.Context, namespace string, lbls labels.Selector) error {
+			deleteCalled = true
+			capturedDeleteNamespace = namespace
+			capturedDeleteLabels = lbls
+			return nil // Success for happy path
+		}
+		s.T().Cleanup(func() { s.server.deleteGeneratorStateFn = originalDeleteFn })
+
+		// 5. Prepare Echo context
+		e := echo.New()
+		// ca.crt in body is needed for processRequest to extract it for its jwtKeyFunc logic (even if hs256Key is set on server).
+		reqBody := fmt.Sprintf(`{"ca.crt":%q}`, testCaCertData)
+		req := httptest.NewRequest(http.MethodDelete, "/test/revokeSelfHappyPath", strings.NewReader(reqBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", "Bearer "+tokenString)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetParamNames("generatorNamespace", "generatorName", "generatorKind")
+		c.SetParamValues(testGeneratorNS, testGeneratorName, testGeneratorKind)
+
+		// 6. Call the handler (revokeSelf)
+		// processRequest is called internally by revokeSelf and is NOT mocked here.
+		handlerErr := s.server.revokeSelf(c)
+		s.Require().NoError(handlerErr, "Handler invocation itself should not error out in happy path")
+
+		// 7. Assertions
+		s.Equal(http.StatusOK, rec.Code, "Expected HTTP OK status")
+		s.True(deleteCalled, "deleteGeneratorStateFn should have been called")
+
+		if deleteCalled { // Only validate params if called, to avoid nil pointer if test setup fails earlier
+			s.Equal(testGeneratorNS, capturedDeleteNamespace, "Incorrect namespace passed to deleteGeneratorStateFn")
+			expectedOwnerLabels := labels.Set{
+				"federation.externalsecrets.com/owner":          testPodName,
+				"federation.externalsecrets.com/generator":      testGeneratorName,
+				"federation.externalsecrets.com/generator-kind": testGeneratorKind,
+			}
+			s.Equal(labels.SelectorFromSet(expectedOwnerLabels).String(), capturedDeleteLabels.String(), "Incorrect labels passed to deleteGeneratorStateFn")
+		}
+	})
+}
+
 func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
-	// Define test cases
 	tests := []struct {
 		name           string
 		setup          func() echo.Context
-		mockGenSecret  func(ctx context.Context, generatorName string, generatorKind string, namespace string) (map[string]string, error)
+		mockGenSecret  func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, error)
 		expectedStatus int
 		expectedBody   string
 	}{
@@ -691,7 +1081,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 
 				return c
 			},
-			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string) (map[string]string, error) {
+			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, error) {
 				// Check that the parameters match what we expect
 				if generatorName != "test-generator" || generatorKind != "test-kind" || namespace != "test-namespace" {
 					return nil, fmt.Errorf("unexpected parameters: %s, %s, %s", generatorName, generatorKind, namespace)
@@ -722,7 +1112,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 
 				return c
 			},
-			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string) (map[string]string, error) {
+			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, error) {
 				// This should not be called
 				s.T().Fatalf("mockGenSecret should not be called in this test case")
 				return nil, nil
@@ -795,7 +1185,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 
 				return c
 			},
-			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string) (map[string]string, error) {
+			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, error) {
 				// This should not be called
 				s.T().Fatalf("mockGenSecret should not be called in this test case")
 				return nil, nil
@@ -868,7 +1258,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 
 				return c
 			},
-			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string) (map[string]string, error) {
+			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, error) {
 				return nil, fmt.Errorf("error generating secret")
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -902,6 +1292,106 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 			s.Contains(rec.Body.String(), tt.expectedBody)
 		})
 	}
+}
+
+func (s *GenerateSecretsTestSuite) TestRevokeCredentialsOfHappyPath() {
+	const (
+		testIssuer           = "https://kubernetes.default.svc.cluster.local/revoke-creds-happy"
+		testSubject          = "system:serviceaccount:test-ns:test-sa-revoke-creds-happy"
+		testParamGeneratorNS = "param-generator-ns-revoke-creds-happy" // Namespace from path param
+		testReqOwner         = "test-pod-revoke-creds-happy-456"       // Owner from request body
+		testReqDeleteNS      = "target-delete-ns-revoke-creds-happy"   // Namespace for deletion from request body
+		testCaCertData       = "test-ca-cert-data-for-revoke-creds-happy"
+		testSAName           = "test-sa-revoke-creds-happy"
+	)
+	var testTokenSigningKey = []byte("test-revoke-creds-secret-key-hs256-happy")
+
+	s.Run("successful revocation of credentials", func() {
+		// 1. Setup AuthorizationSpec in store
+		authSpec := &fedv1alpha1.AuthorizationSpec{
+			FederationRef: fedv1alpha1.FederationRef{Name: "test-fed-revoke-creds-happy", Kind: "Kubernetes"},
+			Subject:       fedv1alpha1.FederationSubject{Subject: testSubject, Issuer: testIssuer},
+			AllowedGeneratorStates: []fedv1alpha1.AllowedGeneratorState{ // Used by revokeCredentialsOf
+				{Namespace: testParamGeneratorNS},
+			},
+		}
+		store.Add(testIssuer, authSpec)
+		s.T().Cleanup(func() { store.Remove(testIssuer, authSpec) })
+
+		// 2. Mock genParseTokenFn to handle HS256 for this test
+		originalGenParseTokenFn := s.server.genParseTokenFn
+		s.server.genParseTokenFn = func(ctx context.Context, onlyTokenValue string, caCrtValue []byte) func(token *jwt.Token) (interface{}, error) {
+			return func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); ok {
+					return testTokenSigningKey, nil
+				}
+				return nil, fmt.Errorf("test: unexpected signing method: %v for revokeCredentialsOf", token.Header["alg"])
+			}
+		}
+		s.T().Cleanup(func() { s.server.genParseTokenFn = originalGenParseTokenFn })
+
+		// 3. Prepare JWT Claims and generate HS256 token
+		claims := &KubernetesClaims{
+			RegisteredClaims: jwt.RegisteredClaims{Issuer: testIssuer, Subject: testSubject},
+			KubernetesIOInner: KubernetesIOInner{
+				Namespace: "test-ns", // SA's namespace
+				ServiceAccount: struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testSAName, UID: "sa-uid-revoke-creds-happy"},
+				// Pod info not strictly necessary for revokeCredentialsOf logic itself, but good for consistency
+				Pod: &struct {
+					Name string `json:"name"`
+					UID  string `json:"uid"`
+				}{Name: testReqOwner, UID: "pod-uid-revoke-creds-happy"},
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString(testTokenSigningKey)
+		s.Require().NoError(err, "Failed to sign test token for revokeCredentialsOf")
+
+		// 4. Mock deleteGeneratorStateFn
+		var deleteCalled bool
+		var capturedDeleteNamespace string
+		var capturedDeleteLabels labels.Selector
+		originalDeleteFn := s.server.deleteGeneratorStateFn
+		s.server.deleteGeneratorStateFn = func(ctx context.Context, namespace string, lbls labels.Selector) error {
+			deleteCalled = true
+			capturedDeleteNamespace = namespace
+			capturedDeleteLabels = lbls
+			return nil // Success for happy path
+		}
+		s.T().Cleanup(func() { s.server.deleteGeneratorStateFn = originalDeleteFn })
+
+		// 5. Prepare Echo context
+		e := echo.New()
+		// Body for revokeCredentialsOf includes owner, namespace (for deletion), and ca.crt (for HS256 key)
+		reqBody := fmt.Sprintf(`{"owner":%q, "namespace":%q, "ca.crt":%q}`,
+			testReqOwner, testReqDeleteNS, testCaCertData)
+		req := httptest.NewRequest(http.MethodDelete, "/test/revokeCredentialsOfHappyPath", strings.NewReader(reqBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", "Bearer "+tokenString)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetParamNames("generatorNamespace") // revokeCredentialsOf uses this path param
+		c.SetParamValues(testParamGeneratorNS)
+
+		// 6. Call the handler
+		handlerErr := s.server.revokeCredentialsOf(c)
+		s.Require().NoError(handlerErr, "Handler invocation should not error in happy path for revokeCredentialsOf")
+
+		// 7. Assertions
+		s.Equal(http.StatusOK, rec.Code, "Expected HTTP OK status for revokeCredentialsOf")
+		s.True(deleteCalled, "deleteGeneratorStateFn should have been called for revokeCredentialsOf")
+
+		if deleteCalled {
+			s.Equal(testReqDeleteNS, capturedDeleteNamespace, "Incorrect namespace passed to deleteGeneratorStateFn")
+			expectedOwnerLabels := labels.Set{
+				"federation.externalsecrets.com/owner": testReqOwner,
+			}
+			s.Equal(labels.SelectorFromSet(expectedOwnerLabels).String(), capturedDeleteLabels.String(), "Incorrect labels passed to deleteGeneratorStateFn")
+		}
+	})
 }
 
 func TestGenerateSecretsTestSuite(t *testing.T) {
