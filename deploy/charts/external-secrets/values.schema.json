@@ -329,6 +329,30 @@
         "extraVolumes": {
             "type": "array"
         },
+        "federation": {
+            "properties": {
+                "listen": {
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        }
+                    },
+                    "type": "object"
+                },
+                "service": {
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "fullnameOverride": {
             "type": "string"
         },

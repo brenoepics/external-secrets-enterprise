@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/sendgrid/rest"
 	sendgridapi "github.com/sendgrid/sendgrid-go"
@@ -32,15 +31,16 @@ import (
 )
 
 const (
-	errNoSpec          = "no config spec provided"
-	errParseSpec       = "unable to parse spec: %w"
-	errFetchSecretRef  = "could not fetch secret ref: %w"
-	errDeleteAPIKey    = "failed to delete existing API key: %w"
-	errCreateAPIKey    = "failed to create new API key: %w"
-	errGetAPIKeys      = "failed to get API keys: %w"
-	errBuildPayload    = "failed to build payload: %w"
-	errProcessResponse = "failed to process response: %w"
-	errBuildRequest    = "failed to build SendGrid request: %w"
+	errNoSpec               = "no config spec provided"
+	errParseSpec            = "unable to parse spec: %w"
+	errFetchSecretRef       = "could not fetch secret ref: %w"
+	errDeleteAPIKey         = "failed to delete existing API key: %w"
+	errCreateAPIKey         = "failed to create new API key: %w"
+	errGetAPIKeys           = "failed to get API keys: %w"
+	errBuildPayload         = "failed to build payload: %w"
+	errProcessResponse      = "failed to process response: %w"
+	errBuildRequest         = "failed to build SendGrid request: %w"
+	errMissingPreviousState = "missing previous state"
 )
 
 type SecretKey struct {
@@ -50,18 +50,9 @@ type SecretKey struct {
 	Scopes []string `json:"scopes,omitempty"`
 }
 
-type SecretKeyList struct {
-	Keys []SecretKey `json:"result"`
-}
-
-func (l *SecretKeyList) filterByName(name string) []SecretKey {
-	var filtered []SecretKey
-	for _, key := range l.Keys {
-		if key.Name == name {
-			filtered = append(filtered, key)
-		}
-	}
-	return filtered
+type SendGridState struct {
+	ApiKeyID   string `json:"apiKeyID,omitempty"`
+	ApiKeyName string `json:"apiKeyName,omitempty"`
 }
 
 type Client interface {
@@ -99,8 +90,7 @@ func (g *Generator) generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 	if err != nil {
 		return nil, nil, fmt.Errorf(errParseSpec, err)
 	}
-
-	secretName := fmt.Sprintf("Created By ESO Generator: %s", res.ObjectMeta.Name)
+	secretName := fmt.Sprintf("Managed By ESO Generator: %s %s", res.ObjectMeta.Name, res.ObjectMeta.UID)
 
 	dataResidency := res.Spec.DataResidency
 	apiKey, err := getFromSecretRef(ctx, &res.Spec.Auth.SecretRef.APIKey, "", kube, namespace)
@@ -108,24 +98,22 @@ func (g *Generator) generate(ctx context.Context, jsonSpec *apiextensions.JSON, 
 		return nil, nil, err
 	}
 
-	secretKeys, err := g.getExistingAPIKeys(apiKey, dataResidency, client)
+	createdSecret, err := g.createAPIKey(secretName, res.Spec.Scopes, apiKey, dataResidency, client)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	keysToDelete := secretKeys.filterByName(secretName)
-	if err := g.deleteAPIKeys(keysToDelete, apiKey, dataResidency, client); err != nil {
-		return nil, nil, err
+	stateData := SendGridState{
+		ApiKeyID:   createdSecret.ID,
+		ApiKeyName: createdSecret.Name,
 	}
-
-	createdSecret, err := g.createAPIKey(secretName, res.Spec.Scopes, apiKey, dataResidency, client)
+	rawState, err := json.Marshal(stateData)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return map[string][]byte{
 		"apiKey": []byte(createdSecret.Key),
-	}, nil, nil
+	}, &apiextensions.JSON{Raw: rawState}, nil
 }
 
 func (g *Generator) buildSendGridRequest(apiKey, dataResidency string, method rest.Method, endpoint string, client Client) (rest.Request, error) {
@@ -138,38 +126,14 @@ func (g *Generator) buildSendGridRequest(apiKey, dataResidency string, method re
 	return request, nil
 }
 
-func (g *Generator) getExistingAPIKeys(apiKey, dataResidency string, client Client) (SecretKeyList, error) {
-	getAPIKeysRequest, err := g.buildSendGridRequest(apiKey, dataResidency, rest.Get, "/v3/api_keys", client)
+func (g *Generator) deleteAPIKey(keyID, apiKey, dataResidency string, client Client) error {
+	path := fmt.Sprintf("/v3/api_keys/%s", keyID)
+	deleteRequest, err := g.buildSendGridRequest(apiKey, dataResidency, rest.Delete, path, client)
 	if err != nil {
-		return SecretKeyList{}, fmt.Errorf(errBuildRequest, err)
+		return fmt.Errorf(errBuildRequest, err)
 	}
-
-	response, err := client.API(getAPIKeysRequest)
-	if err != nil {
-		return SecretKeyList{}, fmt.Errorf(errGetAPIKeys, err)
-	}
-
-	var secretKeys SecretKeyList
-	if err := json.Unmarshal([]byte(response.Body), &secretKeys); err != nil {
-		return SecretKeyList{}, fmt.Errorf(errProcessResponse, err)
-	}
-
-	return secretKeys, nil
-}
-
-func (g *Generator) deleteAPIKeys(apiKeys []SecretKey, apiKey, dataResidency string, client Client) error {
-	for _, key := range apiKeys {
-		path := fmt.Sprintf("/v3/api_keys/%s", key.ID)
-		deleteRequest, err := g.buildSendGridRequest(apiKey, dataResidency, rest.Delete, path, client)
-		if err != nil {
-			return fmt.Errorf(errBuildRequest, err)
-		}
-		if _, err := client.API(deleteRequest); err != nil {
-			// Silently ignore errors when deleting old API Keys because it doesn't prevent the creation of a new API Key.
-			// Old API Keys will be retried for deletion in the next secret generation.
-			log.Printf("failed to delete API Key with ID %s: %v", key.ID, err)
-			continue
-		}
+	if _, err := client.API(deleteRequest); err != nil {
+		return fmt.Errorf(errDeleteAPIKey, err)
 	}
 	return nil
 }
@@ -210,6 +174,12 @@ func parseSpec(data []byte) (*genv1alpha1.SendgridAuthorizationToken, error) {
 	return &spec, err
 }
 
+func parseState(data []byte) (*SendGridState, error) {
+	var state SendGridState
+	err := json.Unmarshal(data, &state)
+	return &state, err
+}
+
 func getFromSecretRef(ctx context.Context, keySelector *esmeta.SecretKeySelector, storeKind string, kube client.Client, namespace string) (string, error) {
 	value, err := resolvers.SecretKeyRef(ctx, kube, storeKind, namespace, keySelector)
 	if err != nil {
@@ -219,10 +189,39 @@ func getFromSecretRef(ctx context.Context, keySelector *esmeta.SecretKeySelector
 	return value, err
 }
 
-func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, state genv1alpha1.GeneratorProviderState, kclient client.Client, namespace string) error {
+func (g *Generator) cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, previousState genv1alpha1.GeneratorProviderState, kclient client.Client, namespace string, client Client) error {
+	if jsonSpec == nil {
+		return errors.New(errNoSpec)
+	}
+
+	if previousState == nil {
+		return errors.New(errMissingPreviousState)
+	}
+
+	status, err := parseState(previousState.Raw)
+	if err != nil {
+		return err
+	}
+	gen, err := parseSpec(jsonSpec.Raw)
+	if err != nil {
+		return err
+	}
+	apiKey, err := getFromSecretRef(ctx, &gen.Spec.Auth.SecretRef.APIKey, "", kclient, namespace)
+	if err != nil {
+		return err
+	}
+
+	err = g.deleteAPIKey(status.ApiKeyID, apiKey, gen.Spec.DataResidency, client)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
+func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, previousState genv1alpha1.GeneratorProviderState, kclient client.Client, namespace string) error {
+	client := &SendGridClient{}
+	return g.cleanup(ctx, jsonSpec, previousState, kclient, namespace, client)
+}
 func init() {
 	genv1alpha1.Register(genv1alpha1.SendgridKind, &Generator{})
 }

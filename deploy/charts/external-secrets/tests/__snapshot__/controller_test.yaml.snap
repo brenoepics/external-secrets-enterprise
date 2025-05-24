@@ -7,8 +7,8 @@ should match snapshot of default values:
         app.kubernetes.io/instance: RELEASE-NAME
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: external-secrets
-        app.kubernetes.io/version: v0.17.0
-        helm.sh/chart: external-secrets-0.17.0
+        app.kubernetes.io/version: v1.1.7
+        helm.sh/chart: external-secrets-1.1.7
       name: RELEASE-NAME-external-secrets
       namespace: NAMESPACE
     spec:
@@ -24,8 +24,8 @@ should match snapshot of default values:
             app.kubernetes.io/instance: RELEASE-NAME
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: external-secrets
-            app.kubernetes.io/version: v0.17.0
-            helm.sh/chart: external-secrets-0.17.0
+            app.kubernetes.io/version: v1.1.7
+            helm.sh/chart: external-secrets-1.1.7
         spec:
           automountServiceAccountToken: true
           containers:
@@ -34,10 +34,13 @@ should match snapshot of default values:
                 - --metrics-addr=:8080
                 - --loglevel=info
                 - --zap-time-encoding=epoch
-              image: oci.external-secrets.io/external-secrets/external-secrets:v0.17.0
+              image: us-central1-docker.pkg.dev/external-secrets-inc-registry/external/external-secrets:v1.1.7
               imagePullPolicy: IfNotPresent
               name: external-secrets
               ports:
+                - containerPort: 8000
+                  name: server
+                  protocol: TCP
                 - containerPort: 8080
                   name: metrics
                   protocol: TCP
