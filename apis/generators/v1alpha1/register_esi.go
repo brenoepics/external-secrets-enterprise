@@ -23,6 +23,7 @@ var (
 	BasicAuthKind         = reflect.TypeOf(BasicAuth{}).Name()
 	SSHKind               = reflect.TypeOf(SSH{}).Name()
 	Neo4jKind             = reflect.TypeOf(Neo4j{}).Name()
+	MongoDBKind           = reflect.TypeOf(MongoDB{}).Name()
 )
 
 func init() {
@@ -44,4 +45,5 @@ func init() {
 	SchemeBuilder.Register(&AWSIAMKey{}, &AWSIAMKeysList{})
 	SchemeBuilder.Register(&SendgridAuthorizationToken{}, &SendgridAuthorizationTokenList{})
 	SchemeBuilder.Register(&RabbitMQ{}, &RabbitMQList{})
+	SchemeBuilder.Register(&MongoDB{}, &MongoDBList{})
 }

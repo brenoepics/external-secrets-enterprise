@@ -109,6 +109,7 @@ require (
 	github.com/sethvargo/go-password v0.3.1
 	github.com/spf13/pflag v1.0.6
 	github.com/testcontainers/testcontainers-go v0.37.0
+	github.com/testcontainers/testcontainers-go/modules/mongodb v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/neo4j v0.37.0
 	github.com/tidwall/sjson v1.2.5
 	gitlab.com/gitlab-org/api/client-go v0.129.0
@@ -192,6 +193,7 @@ require (
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/golang/glog v1.2.5 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/go-github/v71 v71.0.0 // indirect
@@ -222,6 +224,7 @@ require (
 	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
+	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
@@ -254,6 +257,9 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
@@ -358,7 +364,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
-	go.mongodb.org/mongo-driver v1.17.3 // indirect
+	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
