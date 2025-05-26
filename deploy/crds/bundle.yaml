@@ -162,6 +162,9 @@ spec:
                                       - VaultDynamicSecret
                                       - Webhook
                                       - Grafana
+                                      - MFA
+                                      - SendgridAuthorizationToken
+                                      - MongoDB
                                       - Federation
                                     type: string
                                   name:
@@ -351,6 +354,9 @@ spec:
                                       - VaultDynamicSecret
                                       - Webhook
                                       - Grafana
+                                      - MFA
+                                      - SendgridAuthorizationToken
+                                      - MongoDB
                                       - Federation
                                     type: string
                                   name:
@@ -885,6 +891,7 @@ spec:
                                       - AWSIAMKey
                                       - SendgridAuthorizationToken
                                       - RabbitMQ
+                                      - MongoDB
                                       - Federation
                                     type: string
                                   name:
@@ -1077,6 +1084,7 @@ spec:
                                       - AWSIAMKey
                                       - SendgridAuthorizationToken
                                       - RabbitMQ
+                                      - MongoDB
                                       - Federation
                                     type: string
                                   name:
@@ -1729,6 +1737,9 @@ spec:
                                 - VaultDynamicSecret
                                 - Webhook
                                 - Grafana
+                                - MFA
+                                - SendgridAuthorizationToken
+                                - MongoDB
                                 - Federation
                               type: string
                             name:
@@ -10858,6 +10869,9 @@ spec:
                                   - VaultDynamicSecret
                                   - Webhook
                                   - Grafana
+                                  - MFA
+                                  - SendgridAuthorizationToken
+                                  - MongoDB
                                   - Federation
                                 type: string
                               name:
@@ -11047,6 +11061,9 @@ spec:
                                   - VaultDynamicSecret
                                   - Webhook
                                   - Grafana
+                                  - MFA
+                                  - SendgridAuthorizationToken
+                                  - MongoDB
                                   - Federation
                                 type: string
                               name:
@@ -11457,6 +11474,7 @@ spec:
                                   - AWSIAMKey
                                   - SendgridAuthorizationToken
                                   - RabbitMQ
+                                  - MongoDB
                                   - Federation
                                 type: string
                               name:
@@ -11649,6 +11667,7 @@ spec:
                                   - AWSIAMKey
                                   - SendgridAuthorizationToken
                                   - RabbitMQ
+                                  - MongoDB
                                   - Federation
                                 type: string
                               name:
@@ -12124,6 +12143,9 @@ spec:
                             - VaultDynamicSecret
                             - Webhook
                             - Grafana
+                            - MFA
+                            - SendgridAuthorizationToken
+                            - MongoDB
                             - Federation
                           type: string
                         name:
@@ -27222,6 +27244,9 @@ spec:
                                             - VaultDynamicSecret
                                             - Webhook
                                             - Grafana
+                                            - MFA
+                                            - SendgridAuthorizationToken
+                                            - MongoDB
                                             - Federation
                                           type: string
                                         name:
@@ -29319,6 +29344,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -29506,6 +29534,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -29571,6 +29602,9 @@ spec:
                                                 - VaultDynamicSecret
                                                 - Webhook
                                                 - Grafana
+                                                - MFA
+                                                - SendgridAuthorizationToken
+                                                - MongoDB
                                                 - Federation
                                               type: string
                                             name:
@@ -29740,6 +29774,9 @@ spec:
                                             - VaultDynamicSecret
                                             - Webhook
                                             - Grafana
+                                            - MFA
+                                            - SendgridAuthorizationToken
+                                            - MongoDB
                                             - Federation
                                           type: string
                                         name:
@@ -31837,6 +31874,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -32024,6 +32064,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -32089,6 +32132,9 @@ spec:
                                                 - VaultDynamicSecret
                                                 - Webhook
                                                 - Grafana
+                                                - MFA
+                                                - SendgridAuthorizationToken
+                                                - MongoDB
                                                 - Federation
                                               type: string
                                             name:
@@ -32267,6 +32313,9 @@ spec:
                                                   - VaultDynamicSecret
                                                   - Webhook
                                                   - Grafana
+                                                  - MFA
+                                                  - SendgridAuthorizationToken
+                                                  - MongoDB
                                                   - Federation
                                                 type: string
                                               name:
@@ -34364,6 +34413,9 @@ spec:
                                                             - VaultDynamicSecret
                                                             - Webhook
                                                             - Grafana
+                                                            - MFA
+                                                            - SendgridAuthorizationToken
+                                                            - MongoDB
                                                             - Federation
                                                           type: string
                                                         name:
@@ -34551,6 +34603,9 @@ spec:
                                                             - VaultDynamicSecret
                                                             - Webhook
                                                             - Grafana
+                                                            - MFA
+                                                            - SendgridAuthorizationToken
+                                                            - MongoDB
                                                             - Federation
                                                           type: string
                                                         name:
@@ -34616,6 +34671,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -35002,6 +35060,9 @@ spec:
                                             - VaultDynamicSecret
                                             - Webhook
                                             - Grafana
+                                            - MFA
+                                            - SendgridAuthorizationToken
+                                            - MongoDB
                                             - Federation
                                           type: string
                                         name:
@@ -37099,6 +37160,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -37286,6 +37350,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -37351,6 +37418,9 @@ spec:
                                                 - VaultDynamicSecret
                                                 - Webhook
                                                 - Grafana
+                                                - MFA
+                                                - SendgridAuthorizationToken
+                                                - MongoDB
                                                 - Federation
                                               type: string
                                             name:
@@ -37520,6 +37590,9 @@ spec:
                                             - VaultDynamicSecret
                                             - Webhook
                                             - Grafana
+                                            - MFA
+                                            - SendgridAuthorizationToken
+                                            - MongoDB
                                             - Federation
                                           type: string
                                         name:
@@ -39617,6 +39690,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -39804,6 +39880,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
@@ -39869,6 +39948,9 @@ spec:
                                                 - VaultDynamicSecret
                                                 - Webhook
                                                 - Grafana
+                                                - MFA
+                                                - SendgridAuthorizationToken
+                                                - MongoDB
                                                 - Federation
                                               type: string
                                             name:
@@ -40047,6 +40129,9 @@ spec:
                                                   - VaultDynamicSecret
                                                   - Webhook
                                                   - Grafana
+                                                  - MFA
+                                                  - SendgridAuthorizationToken
+                                                  - MongoDB
                                                   - Federation
                                                 type: string
                                               name:
@@ -42144,6 +42229,9 @@ spec:
                                                             - VaultDynamicSecret
                                                             - Webhook
                                                             - Grafana
+                                                            - MFA
+                                                            - SendgridAuthorizationToken
+                                                            - MongoDB
                                                             - Federation
                                                           type: string
                                                         name:
@@ -42331,6 +42419,9 @@ spec:
                                                             - VaultDynamicSecret
                                                             - Webhook
                                                             - Grafana
+                                                            - MFA
+                                                            - SendgridAuthorizationToken
+                                                            - MongoDB
                                                             - Federation
                                                           type: string
                                                         name:
@@ -42396,6 +42487,9 @@ spec:
                                                       - VaultDynamicSecret
                                                       - Webhook
                                                       - Grafana
+                                                      - MFA
+                                                      - SendgridAuthorizationToken
+                                                      - MongoDB
                                                       - Federation
                                                     type: string
                                                   name:
