@@ -4,6 +4,12 @@ dependencies:
   version: 0.3.2
 - name: bitwarden-sdk-server
   repository: oci://ghcr.io/external-secrets/charts
+<<<<<<< HEAD
   version: v0.3.1
 digest: sha256:909123108989b4e20eeb650d908dacfaab71d34ea134f5693b5e09e499e2d7be
 generated: "2025-05-23T16:37:39.358017785-03:00"
+=======
+  version: v0.4.2
+digest: sha256:f42125872b54ab57ac22a14a3b6c9efcc862857195ccf1214ef63b433adcedfc
+generated: "2025-05-25T21:50:21.520319528+01:00"
+>>>>>>> upstream/main
