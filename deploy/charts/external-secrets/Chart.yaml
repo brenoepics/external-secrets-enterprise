@@ -19,6 +19,6 @@ dependencies:
     repository: oci://us-central1-docker.pkg.dev/external-secrets-inc-registry/public/charts
     condition: esi-pod-webhook.enabled
   - name: bitwarden-sdk-server
-    version: v0.3.1
+    version: v0.4.2
     repository: oci://ghcr.io/external-secrets/charts
     condition: bitwarden-sdk-server.enabled
