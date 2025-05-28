@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -21,6 +20,12 @@ import (
 )
 
 type Generator struct{}
+
+type iamAPI interface {
+	CreateAccessKey(ctx context.Context, params *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error)
+	ListAccessKeys(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error)
+	DeleteAccessKey(ctx context.Context, params *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error)
+}
 
 const (
 	errCleanupCredentials  = "could not clean up old credentials for username %v: %w"
@@ -67,7 +72,7 @@ func (g *Generator) generate(
 		return nil, nil, fmt.Errorf(errCreateSess, err)
 	}
 	client := iamFunc(sess)
-	creds, err := client.ListAccessKeys(&iam.ListAccessKeysInput{
+	creds, err := client.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
 		UserName: &username,
 	})
 	if err != nil {
@@ -79,7 +84,7 @@ func (g *Generator) generate(
 			return creds.AccessKeyMetadata[i].CreateDate.Before(*creds.AccessKeyMetadata[j].CreateDate)
 		})
 		for _, cred := range creds.AccessKeyMetadata[:keysToDelete] {
-			_, err = client.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+			_, err = client.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
 				UserName:    &username,
 				AccessKeyId: cred.AccessKeyId,
 			})
@@ -88,7 +93,7 @@ func (g *Generator) generate(
 			}
 		}
 	}
-	out, err := client.CreateAccessKey(&iam.CreateAccessKeyInput{
+	out, err := client.CreateAccessKey(ctx, &iam.CreateAccessKeyInput{
 		UserName: &username,
 	})
 	if err != nil {
@@ -100,10 +105,10 @@ func (g *Generator) generate(
 	}, nil, nil
 }
 
-type iamFactoryFunc func(aws *session.Session) iamiface.IAMAPI
+type iamFactoryFunc func(cfg *aws.Config) iamAPI
 
-func iamFactory(aws *session.Session) iamiface.IAMAPI {
-	return iam.New(aws)
+func iamFactory(cfg *aws.Config) iamAPI {
+	return iam.NewFromConfig(*cfg)
 }
 
 func parseSpec(data []byte) (*genv1alpha1.AWSIAMKey, error) {
