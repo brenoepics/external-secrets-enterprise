@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	v1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,9 +26,9 @@ func TestGenerate(t *testing.T) {
 		jsonSpec      *apiextensions.JSON
 		kube          client.Client
 		namespace     string
-		createKeyFunc func(*iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error)
-		listKeyFunc   func(*iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error)
-		deleteKeyfunc func(*iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error)
+		createKeyFunc func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error)
+		listKeyFunc   func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error)
+		deleteKeyfunc func(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error)
 	}
 	tests := []struct {
 		name    string
@@ -47,7 +47,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "invalid json",
 			args: args{
-				listKeyFunc: func(gati *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+				listKeyFunc: func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
 					return nil, errors.New("boom")
 				},
 				jsonSpec: &apiextensions.JSON{
@@ -70,15 +70,15 @@ func TestGenerate(t *testing.T) {
 						"access-secret": []byte("bar"),
 					},
 				}).Build(),
-				listKeyFunc: func(gati *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+				listKeyFunc: func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
 					return &iam.ListAccessKeysOutput{
-						AccessKeyMetadata: []*iam.AccessKeyMetadata{},
+						AccessKeyMetadata: []types.AccessKeyMetadata{},
 					}, nil
 				},
-				createKeyFunc: func(in *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
+				createKeyFunc: func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error) {
 					t := time.Unix(1234, 0)
 					return &iam.CreateAccessKeyOutput{
-						AccessKey: &iam.AccessKey{
+						AccessKey: &types.AccessKey{
 							AccessKeyId:     utilpointer.To("uuser"),
 							SecretAccessKey: utilpointer.To("pass"),
 							CreateDate:      &t,
@@ -123,9 +123,9 @@ spec:
 						"access-secret": []byte("bar"),
 					},
 				}).Build(),
-				listKeyFunc: func(gati *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+				listKeyFunc: func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
 					return &iam.ListAccessKeysOutput{
-						AccessKeyMetadata: []*iam.AccessKeyMetadata{
+						AccessKeyMetadata: []types.AccessKeyMetadata{
 							{
 								AccessKeyId: utilpointer.To("dead"),
 								CreateDate:  utilpointer.To(time.Unix(1234, 0)),
@@ -137,13 +137,13 @@ spec:
 						},
 					}, nil
 				},
-				deleteKeyfunc: func(in *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
+				deleteKeyfunc: func(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error) {
 					return &iam.DeleteAccessKeyOutput{}, nil
 				},
-				createKeyFunc: func(in *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
+				createKeyFunc: func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error) {
 					t := time.Unix(1234, 0)
 					return &iam.CreateAccessKeyOutput{
-						AccessKey: &iam.AccessKey{
+						AccessKey: &types.AccessKey{
 							AccessKeyId:     utilpointer.To("uuser"),
 							SecretAccessKey: utilpointer.To("pass"),
 							CreateDate:      &t,
@@ -188,9 +188,9 @@ spec:
 						"access-secret": []byte("bar"),
 					},
 				}).Build(),
-				listKeyFunc: func(in *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+				listKeyFunc: func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
 					return &iam.ListAccessKeysOutput{
-						AccessKeyMetadata: []*iam.AccessKeyMetadata{
+						AccessKeyMetadata: []types.AccessKeyMetadata{
 							{
 								AccessKeyId: utilpointer.To("uuser"),
 								CreateDate:  utilpointer.To(time.Unix(1234, 0)),
@@ -206,16 +206,16 @@ spec:
 						},
 					}, nil
 				},
-				deleteKeyfunc: func(in *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
+				deleteKeyfunc: func(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error) {
 					if in.AccessKeyId != nil && *in.AccessKeyId == "uuser3" {
 						return nil, errors.New("target wrong key")
 					}
 					return &iam.DeleteAccessKeyOutput{}, nil
 				},
-				createKeyFunc: func(in *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
+				createKeyFunc: func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error) {
 					t := time.Unix(1237, 0)
 					return &iam.CreateAccessKeyOutput{
-						AccessKey: &iam.AccessKey{
+						AccessKey: &types.AccessKey{
 							AccessKeyId:     utilpointer.To("uuser"),
 							SecretAccessKey: utilpointer.To("pass"),
 							CreateDate:      &t,
@@ -260,9 +260,9 @@ spec:
 						"access-secret": []byte("bar"),
 					},
 				}).Build(),
-				listKeyFunc: func(in *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+				listKeyFunc: func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
 					return &iam.ListAccessKeysOutput{
-						AccessKeyMetadata: []*iam.AccessKeyMetadata{
+						AccessKeyMetadata: []types.AccessKeyMetadata{
 							{
 								AccessKeyId: utilpointer.To("uuser"),
 								CreateDate:  utilpointer.To(time.Unix(1234, 0)),
@@ -270,13 +270,13 @@ spec:
 						},
 					}, nil
 				},
-				deleteKeyfunc: func(in *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
+				deleteKeyfunc: func(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error) {
 					return nil, errors.New("should not be called")
 				},
-				createKeyFunc: func(in *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
+				createKeyFunc: func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error) {
 					t := time.Unix(1234, 0)
 					return &iam.CreateAccessKeyOutput{
-						AccessKey: &iam.AccessKey{
+						AccessKey: &types.AccessKey{
 							AccessKeyId:     utilpointer.To("uuser"),
 							SecretAccessKey: utilpointer.To("pass"),
 							CreateDate:      &t,
@@ -317,7 +317,7 @@ spec:
 				tt.args.jsonSpec,
 				tt.args.kube,
 				tt.args.namespace,
-				func(aws *session.Session) iamiface.IAMAPI {
+				func(cfg *aws.Config) iamAPI {
 					return &FakeIAM{
 						createAccessKeyFunc: tt.args.createKeyFunc,
 						listAccessKeyFunc:   tt.args.listKeyFunc,
@@ -337,20 +337,19 @@ spec:
 }
 
 type FakeIAM struct {
-	iamiface.IAMAPI
-	listAccessKeyFunc   func(*iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error)
-	deleteAccessKeyFunc func(*iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error)
-	createAccessKeyFunc func(*iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error)
+	listAccessKeyFunc   func(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error)
+	deleteAccessKeyFunc func(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error)
+	createAccessKeyFunc func(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error)
 }
 
-func (i *FakeIAM) CreateAccessKey(in *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
-	return i.createAccessKeyFunc(in)
+func (i *FakeIAM) CreateAccessKey(ctx context.Context, in *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error) {
+	return i.createAccessKeyFunc(ctx, in)
 }
 
-func (i *FakeIAM) ListAccessKeys(in *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
-	return i.listAccessKeyFunc(in)
+func (i *FakeIAM) ListAccessKeys(ctx context.Context, in *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
+	return i.listAccessKeyFunc(ctx, in)
 }
 
-func (i *FakeIAM) DeleteAccessKey(in *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
-	return i.deleteAccessKeyFunc(in)
+func (i *FakeIAM) DeleteAccessKey(ctx context.Context, in *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error) {
+	return i.deleteAccessKeyFunc(ctx, in)
 }
