@@ -24,7 +24,6 @@ type SecretStoreRef struct {
 	// Name of the SecretStore resource
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:MaxLength:=253
-	// +kubebuilder:validation:Pattern:=^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
 	Name string `json:"name,omitempty"`
 
 	// Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -213,7 +212,6 @@ type ExternalSecretData struct {
 	// The key in the Kubernetes Secret to store the value.
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:MaxLength:=253
-	// +kubebuilder:validation:Pattern:=^[-._a-zA-Z0-9]+$
 	SecretKey string `json:"secretKey"`
 
 	// RemoteRef points to the remote secret and defines

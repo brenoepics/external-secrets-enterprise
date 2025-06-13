@@ -40,6 +40,28 @@ rules:
     - "list"
     - "watch"
   - apiGroups:
+    - "workflows.external-secrets.io"
+    resources:
+    - "workflows"
+    verbs:
+    - "get"
+    - "list"
+    - "watch"
+    - "update"
+    - "patch"
+    - "create"
+    - "delete"
+  - apiGroups: 
+    - "workflows.external-secrets.io"
+    resources:
+    - "workflows/status"
+    - "workflowruns/status"
+    - "workflowtemplates/status"
+    verbs:
+    - "get"
+    - "update"
+    - "patch"
+  - apiGroups:
     - "external-secrets.io"
     resources:    
     - "secretstores"

@@ -126,7 +126,6 @@ spec:
                             description: The key in the Kubernetes Secret to store the value.
                             maxLength: 253
                             minLength: 1
-                            pattern: ^[-._a-zA-Z0-9]+$
                             type: string
                           sourceRef:
                             description: |-
@@ -196,7 +195,6 @@ spec:
                                     description: Name of the SecretStore resource
                                     maxLength: 253
                                     minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
                                 type: object
                             type: object
@@ -392,7 +390,6 @@ spec:
                                     description: Name of the SecretStore resource
                                     maxLength: 253
                                     minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
                                 type: object
                             type: object
@@ -434,7 +431,6 @@ spec:
                           description: Name of the SecretStore resource
                           maxLength: 253
                           minLength: 1
-                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                           type: string
                       type: object
                     target:
@@ -10851,7 +10847,6 @@ spec:
                         description: The key in the Kubernetes Secret to store the value.
                         maxLength: 253
                         minLength: 1
-                        pattern: ^[-._a-zA-Z0-9]+$
                         type: string
                       sourceRef:
                         description: |-
@@ -10921,7 +10916,6 @@ spec:
                                 description: Name of the SecretStore resource
                                 maxLength: 253
                                 minLength: 1
-                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                 type: string
                             type: object
                         type: object
@@ -11117,7 +11111,6 @@ spec:
                                 description: Name of the SecretStore resource
                                 maxLength: 253
                                 minLength: 1
-                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                 type: string
                             type: object
                         type: object
@@ -11159,7 +11152,6 @@ spec:
                       description: Name of the SecretStore resource
                       maxLength: 253
                       minLength: 1
-                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       type: string
                   type: object
                 target:
@@ -30233,7 +30225,6 @@ spec:
                                             description: The key in the Kubernetes Secret to store the value.
                                             maxLength: 253
                                             minLength: 1
-                                            pattern: ^[-._a-zA-Z0-9]+$
                                             type: string
                                           sourceRef:
                                             description: |-
@@ -30303,7 +30294,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -30497,7 +30487,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -30569,7 +30558,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -30639,7 +30627,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -33117,7 +33104,6 @@ spec:
                                             description: The key in the Kubernetes Secret to store the value.
                                             maxLength: 253
                                             minLength: 1
-                                            pattern: ^[-._a-zA-Z0-9]+$
                                             type: string
                                           sourceRef:
                                             description: |-
@@ -33187,7 +33173,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -33381,7 +33366,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -33453,7 +33437,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -33523,7 +33506,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -36010,7 +35992,6 @@ spec:
                                                   description: The key in the Kubernetes Secret to store the value.
                                                   maxLength: 253
                                                   minLength: 1
-                                                  pattern: ^[-._a-zA-Z0-9]+$
                                                   type: string
                                                 sourceRef:
                                                   description: |-
@@ -36080,7 +36061,6 @@ spec:
                                                           description: Name of the SecretStore resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       type: object
                                                   type: object
@@ -36274,7 +36254,6 @@ spec:
                                                           description: Name of the SecretStore resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       type: object
                                                   type: object
@@ -36346,7 +36325,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -36416,7 +36394,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -39111,7 +39088,6 @@ spec:
                                             description: The key in the Kubernetes Secret to store the value.
                                             maxLength: 253
                                             minLength: 1
-                                            pattern: ^[-._a-zA-Z0-9]+$
                                             type: string
                                           sourceRef:
                                             description: |-
@@ -39181,7 +39157,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -39375,7 +39350,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -39447,7 +39421,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -39517,7 +39490,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -41995,7 +41967,6 @@ spec:
                                             description: The key in the Kubernetes Secret to store the value.
                                             maxLength: 253
                                             minLength: 1
-                                            pattern: ^[-._a-zA-Z0-9]+$
                                             type: string
                                           sourceRef:
                                             description: |-
@@ -42065,7 +42036,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -42259,7 +42229,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -42331,7 +42300,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -42401,7 +42369,6 @@ spec:
                                               description: Name of the SecretStore resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           type: object
                                       type: object
@@ -44888,7 +44855,6 @@ spec:
                                                   description: The key in the Kubernetes Secret to store the value.
                                                   maxLength: 253
                                                   minLength: 1
-                                                  pattern: ^[-._a-zA-Z0-9]+$
                                                   type: string
                                                 sourceRef:
                                                   description: |-
@@ -44958,7 +44924,6 @@ spec:
                                                           description: Name of the SecretStore resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       type: object
                                                   type: object
@@ -45152,7 +45117,6 @@ spec:
                                                           description: Name of the SecretStore resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       type: object
                                                   type: object
@@ -45224,7 +45188,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
@@ -45294,7 +45257,6 @@ spec:
                                                     description: Name of the SecretStore resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 type: object
                                             type: object
