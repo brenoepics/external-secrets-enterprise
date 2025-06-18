@@ -40,7 +40,11 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/yandex-cloud/go-genproto v0.8.0
 	github.com/yandex-cloud/go-sdk v0.9.0
+<<<<<<< HEAD
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78
+=======
+	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+>>>>>>> upstream/main
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.39.0
 	golang.org/x/oauth2 v0.30.0
@@ -84,7 +88,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.69
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.1
+<<<<<<< HEAD
 	github.com/aws/aws-sdk-go-v2/service/iam v1.42.1
+=======
+>>>>>>> upstream/main
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.21
@@ -127,7 +134,10 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
 	github.com/tidwall/sjson v1.2.5
 	gitlab.com/gitlab-org/api/client-go v0.130.1
+<<<<<<< HEAD
 	golang.org/x/sync v0.15.0
+=======
+>>>>>>> upstream/main
 	k8s.io/kube-openapi v0.0.0-20250610211856-8b98d1ed966a
 	sigs.k8s.io/yaml v1.4.0
 	software.sslmate.com/src/go-pkcs12 v0.5.0
