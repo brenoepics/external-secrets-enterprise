@@ -24,7 +24,7 @@ func (p ParameterType) IsPrimitive() bool {
 		ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime:
 		return true
 	case ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-		ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+		ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 		return false
 	default:
 		return false
@@ -35,7 +35,7 @@ func (p ParameterType) IsPrimitive() bool {
 func (p ParameterType) IsKubernetesResource() bool {
 	switch p {
 	case ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-		ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+		ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 		return true
 	case ParameterTypeString, ParameterTypeNumber, ParameterTypeBool,
 		ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime:
@@ -50,7 +50,7 @@ func (p ParameterType) GetAPIVersion() string {
 	switch p {
 	case ParameterTypeNamespace:
 		return "v1"
-	case ParameterTypeSecretStore, ParameterTypeExternalSecret:
+	case ParameterTypeSecretStore, ParameterTypeExternalSecret, ParameterTypeSecretStoreArray:
 		return "external-secrets.io/v1"
 	case ParameterTypeClusterSecretStore:
 		return "external-secrets.io/v1"
@@ -69,7 +69,7 @@ func (p ParameterType) GetKind() string {
 	switch p {
 	case ParameterTypeNamespace:
 		return "Namespace"
-	case ParameterTypeSecretStore:
+	case ParameterTypeSecretStore, ParameterTypeSecretStoreArray:
 		return "SecretStore"
 	case ParameterTypeExternalSecret:
 		return "ExternalSecret"
@@ -140,7 +140,7 @@ func (p *Parameter) ValidateValue(value interface{}) error {
 			}
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 			// No specific validation needed for these types in array context
 		}
 	} else {
@@ -158,7 +158,7 @@ func (p *Parameter) ValidateValue(value interface{}) error {
 			}
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 			// No specific validation needed for these types in single value context
 		}
 	}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -143,7 +144,7 @@ func validateArgumentValue(ctx context.Context, param *Parameter, argValue, name
 			parsedValue = b
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 			// For string and other types, use the raw value
 			parsedValue = argValue
 		}
@@ -181,7 +182,7 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 			}
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator:
+			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
 			// No specific validation needed for these types
 		}
 	}
@@ -198,7 +199,18 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 func validateKubernetesResource(ctx context.Context, param *Parameter, value interface{}, namespace string) error {
 	resourceName, ok := value.(string)
 	if !ok {
-		return fmt.Errorf("kubernetes resource name must be a string")
+		return fmt.Errorf("kubernetes resource name must be a string. received: %T", value)
+	}
+	if param.Type == ParameterTypeSecretStoreArray {
+		resourceList := strings.Split(resourceName, ",")
+		if len(resourceList) > 1 {
+			for i := range resourceList {
+				if err := validateKubernetesResource(ctx, param, resourceList[i], namespace); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 	}
 
 	// Determine the resource namespace
@@ -215,7 +227,7 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 	// Get the GVK for the resource type
 	var gvk schema.GroupVersionKind
 	switch param.Type {
-	case ParameterTypeSecretStore, ParameterTypeExternalSecret, ParameterTypeClusterSecretStore:
+	case ParameterTypeSecretStore, ParameterTypeSecretStoreArray, ParameterTypeExternalSecret, ParameterTypeClusterSecretStore:
 		gvk = schema.GroupVersionKind{
 			Group:   "external-secrets.io",
 			Version: "v1",
