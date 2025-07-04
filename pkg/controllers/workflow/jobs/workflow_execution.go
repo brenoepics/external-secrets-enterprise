@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/smithy-go/ptr"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -107,6 +108,9 @@ func ExecuteStep(
 	stepStatus.Phase = workflows.StepPhaseSucceeded
 	now := metav1.Now()
 	stepStatus.CompletionTime = &now
+	if stepStatus.StartTime != nil {
+		stepStatus.ExecutionTimeNanos = ptr.Int64(now.Time.Sub(stepStatus.StartTime.Time).Nanoseconds())
+	}
 	stepStatus.Outputs = serializedOutputs
 	stepCtx.JobStatus.StepStatuses[stepKey] = stepStatus
 
@@ -139,6 +143,9 @@ func MarkJobCompleted(jobStatus *workflows.JobStatus) {
 	jobStatus.Phase = workflows.JobPhaseSucceeded
 	now := metav1.Now()
 	jobStatus.CompletionTime = &now
+	if jobStatus.StartTime != nil {
+		jobStatus.ExecutionTimeNanos = ptr.Int64(now.Time.Sub(jobStatus.StartTime.Time).Nanoseconds())
+	}
 }
 
 // flattenJobStatuses returns a nested map of job and step outputs.
