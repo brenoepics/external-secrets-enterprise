@@ -5,6 +5,7 @@ package jobs
 
 import (
 	"context"
+	"slices"
 
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -62,9 +63,11 @@ func (c *JobController) Reconcile(ctx context.Context, req ctrl.Request) (result
 				return ctrl.Result{}, err
 			}
 		} else {
-			existing.Status.Locations = append(existing.Status.Locations, finding.Status.Locations...)
-			if err := c.Status().Update(ctx, existing); err != nil {
-				return ctrl.Result{}, err
+			if needsToUpdate(existing, &finding) {
+				existing.Status.Locations = finding.Status.Locations
+				if err := c.Status().Update(ctx, existing); err != nil {
+					return ctrl.Result{}, err
+				}
 			}
 		}
 	}
@@ -80,6 +83,20 @@ func (c *JobController) Reconcile(ctx context.Context, req ctrl.Request) (result
 	}
 
 	return ctrl.Result{RequeueAfter: jobSpec.Spec.Interval.Duration}, nil
+}
+
+func needsToUpdate(existing, finding *v1alpha1.Finding) bool {
+	if existing == nil {
+		return true
+	}
+	if finding == nil {
+		return true
+	}
+	loc1 := existing.Status.Locations
+	loc2 := finding.Status.Locations
+	return !slices.EqualFunc(loc1, loc2, func(a, b v1alpha1.SecretInStoreRef) bool {
+		return a.Name == b.Name && a.Kind == b.Kind && a.APIVersion == b.APIVersion && a.RemoteRef.Key == b.RemoteRef.Key && a.RemoteRef.Property == b.RemoteRef.Property
+	})
 }
 
 // SetupWithManager returns a new controller builder that will be started by the provided Manager.

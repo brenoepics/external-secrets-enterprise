@@ -14,14 +14,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var memorySet = NewMemorySet()
-
 type JobRunner struct {
 	client.Client
 	logr.Logger
 	Constraints *v1alpha1.JobConstraints
 	mgr         *store.Manager
 	Namespace   string
+	memset      *MemorySet
 }
 
 func NewJobRunner(client client.Client, logger logr.Logger, namespace string, constraints *v1alpha1.JobConstraints) *JobRunner {
@@ -32,6 +31,7 @@ func NewJobRunner(client client.Client, logger logr.Logger, namespace string, co
 		Constraints: constraints,
 		Namespace:   namespace,
 		mgr:         mgr,
+		memset:      NewMemorySet(),
 	}
 }
 
@@ -66,9 +66,9 @@ func (j *JobRunner) Run(ctx context.Context) ([]v1alpha1.Finding, error) {
 				for k, v := range valueAsMap {
 					switch v := v.(type) {
 					case []byte:
-						memorySet.Add(newStoreInRef(store.GetName(), key, k), v)
+						j.memset.Add(newStoreInRef(store.GetName(), key, k), v)
 					case string:
-						memorySet.Add(newStoreInRef(store.GetName(), key, k), []byte(v))
+						j.memset.Add(newStoreInRef(store.GetName(), key, k), []byte(v))
 					default:
 						return nil, fmt.Errorf("no conversion for value of type %T", v)
 					}
@@ -76,11 +76,11 @@ func (j *JobRunner) Run(ctx context.Context) ([]v1alpha1.Finding, error) {
 			}
 
 			// For Each duplicate found, create a Finding bound to that hash;
-			memorySet.Add(newStoreInRef(store.GetName(), key, ""), value)
+			j.memset.Add(newStoreInRef(store.GetName(), key, ""), value)
 		}
 	}
 
-	return memorySet.GetDuplicates(), nil
+	return j.memset.GetDuplicates(), nil
 }
 
 func newStoreInRef(store, key, property string) v1alpha1.SecretInStoreRef {

@@ -51,7 +51,7 @@ func (ms *MemorySet) GetDuplicates() []v1alpha1.Finding {
 		if len(keys) > 1 {
 			finding := v1alpha1.Finding{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: hash,
+					Name: hash[:16],
 				},
 				Spec: v1alpha1.FindingSpec{
 					Hash: hash,
