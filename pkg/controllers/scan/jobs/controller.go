@@ -1,0 +1,88 @@
+package jobs
+
+import (
+	"context"
+
+	"github.com/go-logr/logr"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+
+	"github.com/external-secrets/external-secrets/apis/scan/v1alpha1"
+	utils "github.com/external-secrets/external-secrets/pkg/controllers/scan/utils/job"
+)
+
+type JobController struct {
+	client.Client
+	Log    logr.Logger
+	Scheme *runtime.Scheme
+}
+
+func (c *JobController) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
+	jobSpec := &v1alpha1.Job{}
+	if err := c.Get(ctx, req.NamespacedName, jobSpec); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	if jobSpec.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, nil
+	}
+	//TODO: Add ShouldReconcile Method checking if Job already has ran at least once
+
+	// Synchronize
+	j := utils.NewJobRunner(c.Client, c.Log, jobSpec.Namespace, jobSpec.Spec.Constraints)
+	// Run the Job applying constraints
+	findings, err := j.Run(ctx)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	// for each finding, see if it already exists and update it if it does;
+	for _, finding := range findings {
+		req := client.ObjectKey{
+			Name:      finding.Name,
+			Namespace: jobSpec.Namespace,
+		}
+		existing := &v1alpha1.Finding{}
+		finding.SetNamespace(jobSpec.Namespace)
+		if err := c.Get(ctx, req, existing); err != nil {
+			if apierrors.IsNotFound(err) {
+				// Create Finding
+				if err := c.Create(ctx, &finding); err != nil {
+					return ctrl.Result{}, err
+				}
+				if err := c.Status().Update(ctx, &finding); err != nil {
+					return ctrl.Result{}, err
+				}
+			} else {
+				return ctrl.Result{}, err
+			}
+		} else {
+			existing.Status.Locations = append(existing.Status.Locations, finding.Status.Locations...)
+			if err := c.Status().Update(ctx, existing); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+	jobSpec.Status = v1alpha1.JobStatus{
+		LastRunTime: metav1.Now(),
+		RunStatus:   v1alpha1.JobRunStatusSucceeded,
+	}
+	if jobSpec.Spec.RunPolicy == v1alpha1.JobRunPolicyOnce {
+		return ctrl.Result{}, nil
+	}
+	if jobSpec.Spec.RunPolicy == v1alpha1.JobRunPolicyOnChange {
+		return ctrl.Result{}, nil
+	}
+
+	return ctrl.Result{RequeueAfter: jobSpec.Spec.Interval.Duration}, nil
+}
+
+// SetupWithManager returns a new controller builder that will be started by the provided Manager.
+func (c *JobController) SetupWithManager(mgr ctrl.Manager, opts controller.Options) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(opts).
+		For(&v1alpha1.Job{}).
+		Complete(c)
+}
