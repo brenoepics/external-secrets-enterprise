@@ -174,7 +174,6 @@ spec:
                                     description: Specify the name of the generator resource
                                     maxLength: 253
                                     minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
                                 required:
                                   - kind
@@ -394,7 +393,6 @@ spec:
                                     description: Specify the name of the generator resource
                                     maxLength: 253
                                     minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
                                 required:
                                   - kind
@@ -1785,7 +1783,6 @@ spec:
                               description: Specify the name of the generator resource
                               maxLength: 253
                               minLength: 1
-                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                               type: string
                           required:
                             - kind
@@ -11059,7 +11056,6 @@ spec:
                                 description: Specify the name of the generator resource
                                 maxLength: 253
                                 minLength: 1
-                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                 type: string
                             required:
                               - kind
@@ -11279,7 +11275,6 @@ spec:
                                 description: Specify the name of the generator resource
                                 maxLength: 253
                                 minLength: 1
-                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                 type: string
                             required:
                               - kind
@@ -12371,7 +12366,6 @@ spec:
                           description: Specify the name of the generator resource
                           maxLength: 253
                           minLength: 1
-                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                           type: string
                       required:
                         - kind
@@ -28831,7 +28825,6 @@ spec:
                                           description: Specify the name of the generator resource
                                           maxLength: 253
                                           minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                           type: string
                                       required:
                                         - kind
@@ -31297,7 +31290,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -31515,7 +31507,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -31586,7 +31577,6 @@ spec:
                                               description: Specify the name of the generator resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           required:
                                             - kind
@@ -31760,7 +31750,6 @@ spec:
                                           description: Specify the name of the generator resource
                                           maxLength: 253
                                           minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                           type: string
                                       required:
                                         - kind
@@ -34226,7 +34215,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -34444,7 +34432,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -34515,7 +34502,6 @@ spec:
                                               description: Specify the name of the generator resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           required:
                                             - kind
@@ -34698,7 +34684,6 @@ spec:
                                                 description: Specify the name of the generator resource
                                                 maxLength: 253
                                                 minLength: 1
-                                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                 type: string
                                             required:
                                               - kind
@@ -37164,7 +37149,6 @@ spec:
                                                           description: Specify the name of the generator resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       required:
                                                         - kind
@@ -37382,7 +37366,6 @@ spec:
                                                           description: Specify the name of the generator resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       required:
                                                         - kind
@@ -37453,7 +37436,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -37853,7 +37835,6 @@ spec:
                                           description: Specify the name of the generator resource
                                           maxLength: 253
                                           minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                           type: string
                                       required:
                                         - kind
@@ -40319,7 +40300,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -40537,7 +40517,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -40608,7 +40587,6 @@ spec:
                                               description: Specify the name of the generator resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           required:
                                             - kind
@@ -40782,7 +40760,6 @@ spec:
                                           description: Specify the name of the generator resource
                                           maxLength: 253
                                           minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                           type: string
                                       required:
                                         - kind
@@ -43248,7 +43225,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -43466,7 +43442,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -43537,7 +43512,6 @@ spec:
                                               description: Specify the name of the generator resource
                                               maxLength: 253
                                               minLength: 1
-                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                               type: string
                                           required:
                                             - kind
@@ -43720,7 +43694,6 @@ spec:
                                                 description: Specify the name of the generator resource
                                                 maxLength: 253
                                                 minLength: 1
-                                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                 type: string
                                             required:
                                               - kind
@@ -46186,7 +46159,6 @@ spec:
                                                           description: Specify the name of the generator resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       required:
                                                         - kind
@@ -46404,7 +46376,6 @@ spec:
                                                           description: Specify the name of the generator resource
                                                           maxLength: 253
                                                           minLength: 1
-                                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                           type: string
                                                       required:
                                                         - kind
@@ -46475,7 +46446,6 @@ spec:
                                                     description: Specify the name of the generator resource
                                                     maxLength: 253
                                                     minLength: 1
-                                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                                     type: string
                                                 required:
                                                   - kind
@@ -46665,19 +46635,7 @@ spec:
                               description: |-
                                 Type specifies the data type of the parameter
                                 For array/multi-value parameters, use allowMultiple: true with the appropriate type
-                              enum:
-                                - string
-                                - number
-                                - bool
-                                - object
-                                - secret
-                                - time
-                                - namespace
-                                - secretstore
-                                - externalsecret
-                                - clustersecretstore
-                                - k8ssecret
-                                - array[secretstore]
+                              pattern: ^(string|number|bool|object|secret|time|namespace|secretstore|externalsecret|clustersecretstore|k8ssecret|array\[secretstore\]|generator\[[a-zA-Z0-9_-]+\]|array\[generator\[[a-zA-Z0-9_-]+\]\])$
                               type: string
                             validation:
                               description: |-

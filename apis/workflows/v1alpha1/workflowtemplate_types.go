@@ -52,7 +52,7 @@ type ParameterGroup struct {
 }
 
 // ParameterType represents the data type of a parameter
-// +kubebuilder:validation:Enum=string;number;bool;object;secret;time;namespace;secretstore;externalsecret;clustersecretstore;k8ssecret;array[secretstore]
+// +kubebuilder:validation:Pattern=`^(string|number|bool|object|secret|time|namespace|secretstore|externalsecret|clustersecretstore|k8ssecret|array\[secretstore\]|generator\[[a-zA-Z0-9_-]+\]|array\[generator\[[a-zA-Z0-9_-]+\]\])$`
 type ParameterType string
 
 const (
@@ -69,10 +69,11 @@ const (
 	ParameterTypeSecretStore        ParameterType = "secretstore"
 	ParameterTypeExternalSecret     ParameterType = "externalsecret"
 	ParameterTypeClusterSecretStore ParameterType = "clustersecretstore"
-	ParameterTypeGenerator          ParameterType = "generator"
+	ParameterTypeGenerator          ParameterType = `^generator\[([a-zA-Z0-9_-]+)\]$`
 
 	// Array Types (add as needed).
 	ParameterTypeSecretStoreArray ParameterType = "array[secretstore]"
+	ParameterTypeGeneratorArray   ParameterType = `^array\[generator\[([a-zA-Z0-9_-]+)\]\]$`
 )
 
 // ResourceConstraints defines constraints for Kubernetes resource selection.

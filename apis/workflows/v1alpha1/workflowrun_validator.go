@@ -22,9 +22,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	genv1alpha1 "github.com/external-secrets/external-secrets/apis/generators/v1alpha1"
 )
 
 // k8sClient is a global variable that will be set during controller initialization.
@@ -144,8 +147,13 @@ func validateArgumentValue(ctx context.Context, param *Parameter, argValue, name
 			parsedValue = b
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
+			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
+			ParameterTypeGenerator, ParameterTypeGeneratorArray:
 			// For string and other types, use the raw value
+			parsedValue = argValue
+		}
+
+		if param.Type.IsGeneratorType() || param.Type.IsGeneratorArrayType() {
 			parsedValue = argValue
 		}
 
@@ -182,7 +190,8 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 			}
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
-			ParameterTypeClusterSecretStore, ParameterTypeGenerator, ParameterTypeSecretStoreArray:
+			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
+			ParameterTypeGenerator, ParameterTypeGeneratorArray:
 			// No specific validation needed for these types
 		}
 	}
@@ -213,6 +222,17 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 		}
 	}
 
+	if param.Type.IsGeneratorArrayType() {
+		resourceList := strings.Split(resourceName, ",")
+		param.Type = ParameterType(fmt.Sprintf("generator[%s]", param.Type.ExtractGeneratorKind()))
+		for i := range resourceList {
+			if err := validateKubernetesResource(ctx, param, resourceList[i], namespace); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	// Determine the resource namespace
 	resourceNamespace := namespace
 	if param.ResourceConstraints != nil && param.ResourceConstraints.Namespace != "" {
@@ -233,12 +253,6 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 			Version: "v1",
 			Kind:    param.Type.GetKind(),
 		}
-	case ParameterTypeGenerator:
-		gvk = schema.GroupVersionKind{
-			Group:   "generators.external-secrets.io",
-			Version: "v1alpha1",
-			Kind:    param.Type.GetKind(),
-		}
 	case ParameterTypeNamespace:
 		gvk = schema.GroupVersionKind{
 			Group:   "",
@@ -251,6 +265,21 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 			Group:   "",
 			Version: param.Type.GetAPIVersion(),
 			Kind:    param.Type.GetKind(),
+		}
+	case ParameterTypeGenerator, ParameterTypeGeneratorArray:
+		gvk = schema.GroupVersionKind{
+			Group:   "generators.external-secrets.io",
+			Version: "v1alpha1",
+			Kind:    param.Type.ExtractGeneratorKind(),
+		}
+	}
+
+	// Special case for Generator type
+	if param.Type.IsGeneratorType() {
+		gvk = schema.GroupVersionKind{
+			Group:   "generators.external-secrets.io",
+			Version: "v1alpha1",
+			Kind:    param.Type.ExtractGeneratorKind(),
 		}
 	}
 
@@ -267,20 +296,64 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 
 	// Create an unstructured object to fetch the resource
 	obj := &unstructured.Unstructured{}
-	obj.SetGroupVersionKind(gvk)
+	if !strings.EqualFold(gvk.Kind, "any") {
+		obj.SetGroupVersionKind(gvk)
 
-	// Fetch the resource
-	err := k8sClient.Get(ctx, types.NamespacedName{
-		Namespace: resourceNamespace,
-		Name:      resourceName,
-	}, obj)
+		// Fetch the resource
+		err := k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: resourceNamespace,
+			Name:      resourceName,
+		}, obj)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return fmt.Errorf("resource %s of type %s not found in namespace %s",
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("resource %s of type %s not found in namespace %s",
+					resourceName, param.Type, resourceNamespace)
+			}
+			return fmt.Errorf("error fetching resource: %w", err)
+		}
+	} else if gvk.Group == "generators.external-secrets.io" { // Handle generator[any]
+		generatorFound := false
+		scheme := runtime.NewScheme()
+		_ = genv1alpha1.AddToScheme(scheme)
+
+		kinds := scheme.KnownTypes(genv1alpha1.SchemeGroupVersion)
+
+		for kind := range kinds {
+			// Ignore kubernetes default types and generators lists
+			if strings.HasSuffix(kind, "List") ||
+				kind == "CreateOptions" ||
+				kind == "DeleteOptions" ||
+				kind == "GetOptions" ||
+				kind == "ListOptions" ||
+				kind == "PatchOptions" ||
+				kind == "UpdateOptions" ||
+				kind == "WatchEvent" {
+				continue
+			}
+
+			gvk.Kind = kind
+			obj.SetGroupVersionKind(gvk)
+			err := k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: resourceNamespace,
+				Name:      resourceName,
+			}, obj)
+
+			if err != nil {
+				if errors.IsNotFound(err) {
+					continue
+				}
+				return fmt.Errorf("error fetching resource: %w", err)
+			}
+
+			generatorFound = true
+			break
+		}
+
+		if !generatorFound {
+			return fmt.Errorf("no resource %s of type %s found in namespace %s",
 				resourceName, param.Type, resourceNamespace)
 		}
-		return fmt.Errorf("error fetching resource: %w", err)
 	}
 
 	// Check label selector constraints if specified
