@@ -14,7 +14,7 @@ type JobSpec struct {
 	RunPolicy JobRunPolicy `json:"runPolicy,omitempty"`
 	// Defines the interval for this job if Policy is Scheduled(Scheduled/OnChange/Once)
 	Interval metav1.Duration `json:"interval,omitempty"`
-	//TODO - also implement Cron Schedulingf
+	// TODO - also implement Cron Schedulingf
 }
 
 type JobRunPolicy string

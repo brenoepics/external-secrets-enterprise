@@ -1,3 +1,6 @@
+// Copyright External Secrets Inc. 2025
+// All Rights Reserved
+
 package jobs
 
 import (
@@ -12,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/external-secrets/external-secrets/apis/scan/v1alpha1"
-	utils "github.com/external-secrets/external-secrets/pkg/controllers/scan/utils/job"
+	utils "github.com/external-secrets/external-secrets/pkg/scan/jobs"
 )
 
 type JobController struct {
