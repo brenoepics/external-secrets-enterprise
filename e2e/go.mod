@@ -65,7 +65,7 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/oracle/oci-go-sdk/v65 v65.95.0
 	github.com/scaleway/scaleway-sdk-go v1.0.0-beta.33
-	gitlab.com/gitlab-org/api/client-go v0.133.0
+	gitlab.com/gitlab-org/api/client-go v0.134.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.240.0
 	k8s.io/api v0.33.2
@@ -227,9 +227,9 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
-	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
