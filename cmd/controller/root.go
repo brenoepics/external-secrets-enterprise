@@ -37,6 +37,7 @@ import (
 	esv1alpha1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1alpha1"
 	fedv1alpha1 "github.com/external-secrets/external-secrets/apis/federation/v1alpha1"
 	genv1alpha1 "github.com/external-secrets/external-secrets/apis/generators/v1alpha1"
+	scanv1alpha1 "github.com/external-secrets/external-secrets/apis/scan/v1alpha1"
 	wfv1alpha1 "github.com/external-secrets/external-secrets/apis/workflows/v1alpha1"
 	"github.com/external-secrets/external-secrets/pkg/controllers/clusterexternalsecret"
 	"github.com/external-secrets/external-secrets/pkg/controllers/clusterexternalsecret/cesmetrics"
@@ -50,6 +51,7 @@ import (
 	ctrlmetrics "github.com/external-secrets/external-secrets/pkg/controllers/metrics"
 	"github.com/external-secrets/external-secrets/pkg/controllers/pushsecret"
 	"github.com/external-secrets/external-secrets/pkg/controllers/pushsecret/psmetrics"
+	scanjob "github.com/external-secrets/external-secrets/pkg/controllers/scan/jobs"
 	"github.com/external-secrets/external-secrets/pkg/controllers/secretstore"
 	"github.com/external-secrets/external-secrets/pkg/controllers/secretstore/cssmetrics"
 	"github.com/external-secrets/external-secrets/pkg/controllers/secretstore/ssmetrics"
@@ -125,6 +127,7 @@ func init() {
 	// external-secrets-enterprise schemes
 	utilruntime.Must(fedv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(wfv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(scanv1alpha1.AddToScheme(scheme))
 }
 
 var rootCmd = &cobra.Command{
@@ -304,6 +307,14 @@ var rootCmd = &cobra.Command{
 			Recorder: mgr.GetEventRecorderFor("workflowrun-controller"),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, errCreateController, "controller", "WorkflowRun")
+			os.Exit(1)
+		}
+		if err = (&scanjob.JobController{
+			Client: mgr.GetClient(),
+			Log:    ctrl.Log.WithName("controllers").WithName("Job"),
+			Scheme: mgr.GetScheme(),
+		}).SetupWithManager(mgr, controller.Options{}); err != nil {
+			setupLog.Error(err, errCreateController, "controller", "Job")
 			os.Exit(1)
 		}
 		if err = (&workflow.WorkflowRunTemplateReconciler{
