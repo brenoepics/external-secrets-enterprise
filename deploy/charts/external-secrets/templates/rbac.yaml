@@ -14,6 +14,35 @@ metadata:
     {{- include "external-secrets.labels" . | nindent 4 }}
 rules:
   - apiGroups:
+    - "scan.external-secrets.io"
+    resources:
+    - "jobs"
+    verbs:
+    - "get"
+    - "list"
+    - "watch"
+  - apiGroups:
+    - "scan.external-secrets.io"
+    resources:
+    - "findings"
+    verbs:
+    - "get"
+    - "list"
+    - "watch"
+    - "create"
+    - "patch"
+    - "update"
+    - "delete"
+  - apiGroups:
+    - "scan.external-secrets.io"
+    resources:
+    - "jobs/status"
+    - "findings/status"
+    verbs:
+    - "get"
+    - "patch"
+    - "update"
+  - apiGroups:
     - "federation.external-secrets.io"
     resources:
     - "*"
