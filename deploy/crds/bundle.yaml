@@ -147,28 +147,6 @@ spec:
                                     type: string
                                   kind:
                                     description: Specify the Kind of the generator resource
-                                    enum:
-                                      - ACRAccessToken
-                                      - ClusterGenerator
-                                      - ECRAuthorizationToken
-                                      - Fake
-                                      - GCRAccessToken
-                                      - GithubAccessToken
-                                      - QuayAccessToken
-                                      - Password
-                                      - STSSessionToken
-                                      - UUID
-                                      - VaultDynamicSecret
-                                      - Webhook
-                                      - Grafana
-                                      - MFA
-                                      - SendgridAuthorizationToken
-                                      - MongoDB
-                                      - Federation
-                                      - BasicAuth
-                                      - SSH
-                                      - Neo4j
-                                      - PostgreSql
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -363,28 +341,6 @@ spec:
                                     type: string
                                   kind:
                                     description: Specify the Kind of the generator resource
-                                    enum:
-                                      - ACRAccessToken
-                                      - ClusterGenerator
-                                      - ECRAuthorizationToken
-                                      - Fake
-                                      - GCRAccessToken
-                                      - GithubAccessToken
-                                      - QuayAccessToken
-                                      - Password
-                                      - STSSessionToken
-                                      - UUID
-                                      - VaultDynamicSecret
-                                      - Webhook
-                                      - Grafana
-                                      - MFA
-                                      - SendgridAuthorizationToken
-                                      - MongoDB
-                                      - Federation
-                                      - BasicAuth
-                                      - SSH
-                                      - Neo4j
-                                      - PostgreSql
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -1735,28 +1691,6 @@ spec:
                               type: string
                             kind:
                               description: Specify the Kind of the generator resource
-                              enum:
-                                - ACRAccessToken
-                                - ClusterGenerator
-                                - ECRAuthorizationToken
-                                - Fake
-                                - GCRAccessToken
-                                - GithubAccessToken
-                                - QuayAccessToken
-                                - Password
-                                - STSSessionToken
-                                - UUID
-                                - VaultDynamicSecret
-                                - Webhook
-                                - Grafana
-                                - MFA
-                                - SendgridAuthorizationToken
-                                - MongoDB
-                                - Federation
-                                - BasicAuth
-                                - SSH
-                                - Neo4j
-                                - PostgreSql
                               type: string
                             name:
                               description: Specify the name of the generator resource
@@ -11008,28 +10942,6 @@ spec:
                                 type: string
                               kind:
                                 description: Specify the Kind of the generator resource
-                                enum:
-                                  - ACRAccessToken
-                                  - ClusterGenerator
-                                  - ECRAuthorizationToken
-                                  - Fake
-                                  - GCRAccessToken
-                                  - GithubAccessToken
-                                  - QuayAccessToken
-                                  - Password
-                                  - STSSessionToken
-                                  - UUID
-                                  - VaultDynamicSecret
-                                  - Webhook
-                                  - Grafana
-                                  - MFA
-                                  - SendgridAuthorizationToken
-                                  - MongoDB
-                                  - Federation
-                                  - BasicAuth
-                                  - SSH
-                                  - Neo4j
-                                  - PostgreSql
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -11224,28 +11136,6 @@ spec:
                                 type: string
                               kind:
                                 description: Specify the Kind of the generator resource
-                                enum:
-                                  - ACRAccessToken
-                                  - ClusterGenerator
-                                  - ECRAuthorizationToken
-                                  - Fake
-                                  - GCRAccessToken
-                                  - GithubAccessToken
-                                  - QuayAccessToken
-                                  - Password
-                                  - STSSessionToken
-                                  - UUID
-                                  - VaultDynamicSecret
-                                  - Webhook
-                                  - Grafana
-                                  - MFA
-                                  - SendgridAuthorizationToken
-                                  - MongoDB
-                                  - Federation
-                                  - BasicAuth
-                                  - SSH
-                                  - Neo4j
-                                  - PostgreSql
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -12297,28 +12187,6 @@ spec:
                           type: string
                         kind:
                           description: Specify the Kind of the generator resource
-                          enum:
-                            - ACRAccessToken
-                            - ClusterGenerator
-                            - ECRAuthorizationToken
-                            - Fake
-                            - GCRAccessToken
-                            - GithubAccessToken
-                            - QuayAccessToken
-                            - Password
-                            - STSSessionToken
-                            - UUID
-                            - VaultDynamicSecret
-                            - Webhook
-                            - Grafana
-                            - MFA
-                            - SendgridAuthorizationToken
-                            - MongoDB
-                            - Federation
-                            - BasicAuth
-                            - SSH
-                            - Neo4j
-                            - PostgreSql
                           type: string
                         name:
                           description: Specify the name of the generator resource
@@ -28752,28 +28620,6 @@ spec:
                                           type: string
                                         kind:
                                           description: Specify the Kind of the generator resource
-                                          enum:
-                                            - ACRAccessToken
-                                            - ClusterGenerator
-                                            - ECRAuthorizationToken
-                                            - Fake
-                                            - GCRAccessToken
-                                            - GithubAccessToken
-                                            - QuayAccessToken
-                                            - Password
-                                            - STSSessionToken
-                                            - UUID
-                                            - VaultDynamicSecret
-                                            - Webhook
-                                            - Grafana
-                                            - MFA
-                                            - SendgridAuthorizationToken
-                                            - MongoDB
-                                            - Federation
-                                            - BasicAuth
-                                            - SSH
-                                            - Neo4j
-                                            - PostgreSql
                                           type: string
                                         name:
                                           description: Specify the name of the generator resource
@@ -31217,28 +31063,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -31431,28 +31255,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -31498,28 +31300,6 @@ spec:
                                               type: string
                                             kind:
                                               description: Specify the Kind of the generator resource
-                                              enum:
-                                                - ACRAccessToken
-                                                - ClusterGenerator
-                                                - ECRAuthorizationToken
-                                                - Fake
-                                                - GCRAccessToken
-                                                - GithubAccessToken
-                                                - QuayAccessToken
-                                                - Password
-                                                - STSSessionToken
-                                                - UUID
-                                                - VaultDynamicSecret
-                                                - Webhook
-                                                - Grafana
-                                                - MFA
-                                                - SendgridAuthorizationToken
-                                                - MongoDB
-                                                - Federation
-                                                - BasicAuth
-                                                - SSH
-                                                - Neo4j
-                                                - PostgreSql
                                               type: string
                                             name:
                                               description: Specify the name of the generator resource
@@ -31665,28 +31445,6 @@ spec:
                                           type: string
                                         kind:
                                           description: Specify the Kind of the generator resource
-                                          enum:
-                                            - ACRAccessToken
-                                            - ClusterGenerator
-                                            - ECRAuthorizationToken
-                                            - Fake
-                                            - GCRAccessToken
-                                            - GithubAccessToken
-                                            - QuayAccessToken
-                                            - Password
-                                            - STSSessionToken
-                                            - UUID
-                                            - VaultDynamicSecret
-                                            - Webhook
-                                            - Grafana
-                                            - MFA
-                                            - SendgridAuthorizationToken
-                                            - MongoDB
-                                            - Federation
-                                            - BasicAuth
-                                            - SSH
-                                            - Neo4j
-                                            - PostgreSql
                                           type: string
                                         name:
                                           description: Specify the name of the generator resource
@@ -34130,28 +33888,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -34344,28 +34080,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -34411,28 +34125,6 @@ spec:
                                               type: string
                                             kind:
                                               description: Specify the Kind of the generator resource
-                                              enum:
-                                                - ACRAccessToken
-                                                - ClusterGenerator
-                                                - ECRAuthorizationToken
-                                                - Fake
-                                                - GCRAccessToken
-                                                - GithubAccessToken
-                                                - QuayAccessToken
-                                                - Password
-                                                - STSSessionToken
-                                                - UUID
-                                                - VaultDynamicSecret
-                                                - Webhook
-                                                - Grafana
-                                                - MFA
-                                                - SendgridAuthorizationToken
-                                                - MongoDB
-                                                - Federation
-                                                - BasicAuth
-                                                - SSH
-                                                - Neo4j
-                                                - PostgreSql
                                               type: string
                                             name:
                                               description: Specify the name of the generator resource
@@ -34587,28 +34279,6 @@ spec:
                                                 type: string
                                               kind:
                                                 description: Specify the Kind of the generator resource
-                                                enum:
-                                                  - ACRAccessToken
-                                                  - ClusterGenerator
-                                                  - ECRAuthorizationToken
-                                                  - Fake
-                                                  - GCRAccessToken
-                                                  - GithubAccessToken
-                                                  - QuayAccessToken
-                                                  - Password
-                                                  - STSSessionToken
-                                                  - UUID
-                                                  - VaultDynamicSecret
-                                                  - Webhook
-                                                  - Grafana
-                                                  - MFA
-                                                  - SendgridAuthorizationToken
-                                                  - MongoDB
-                                                  - Federation
-                                                  - BasicAuth
-                                                  - SSH
-                                                  - Neo4j
-                                                  - PostgreSql
                                                 type: string
                                               name:
                                                 description: Specify the name of the generator resource
@@ -37052,28 +36722,6 @@ spec:
                                                           type: string
                                                         kind:
                                                           description: Specify the Kind of the generator resource
-                                                          enum:
-                                                            - ACRAccessToken
-                                                            - ClusterGenerator
-                                                            - ECRAuthorizationToken
-                                                            - Fake
-                                                            - GCRAccessToken
-                                                            - GithubAccessToken
-                                                            - QuayAccessToken
-                                                            - Password
-                                                            - STSSessionToken
-                                                            - UUID
-                                                            - VaultDynamicSecret
-                                                            - Webhook
-                                                            - Grafana
-                                                            - MFA
-                                                            - SendgridAuthorizationToken
-                                                            - MongoDB
-                                                            - Federation
-                                                            - BasicAuth
-                                                            - SSH
-                                                            - Neo4j
-                                                            - PostgreSql
                                                           type: string
                                                         name:
                                                           description: Specify the name of the generator resource
@@ -37266,28 +36914,6 @@ spec:
                                                           type: string
                                                         kind:
                                                           description: Specify the Kind of the generator resource
-                                                          enum:
-                                                            - ACRAccessToken
-                                                            - ClusterGenerator
-                                                            - ECRAuthorizationToken
-                                                            - Fake
-                                                            - GCRAccessToken
-                                                            - GithubAccessToken
-                                                            - QuayAccessToken
-                                                            - Password
-                                                            - STSSessionToken
-                                                            - UUID
-                                                            - VaultDynamicSecret
-                                                            - Webhook
-                                                            - Grafana
-                                                            - MFA
-                                                            - SendgridAuthorizationToken
-                                                            - MongoDB
-                                                            - Federation
-                                                            - BasicAuth
-                                                            - SSH
-                                                            - Neo4j
-                                                            - PostgreSql
                                                           type: string
                                                         name:
                                                           description: Specify the name of the generator resource
@@ -37333,28 +36959,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -37724,28 +37328,6 @@ spec:
                                           type: string
                                         kind:
                                           description: Specify the Kind of the generator resource
-                                          enum:
-                                            - ACRAccessToken
-                                            - ClusterGenerator
-                                            - ECRAuthorizationToken
-                                            - Fake
-                                            - GCRAccessToken
-                                            - GithubAccessToken
-                                            - QuayAccessToken
-                                            - Password
-                                            - STSSessionToken
-                                            - UUID
-                                            - VaultDynamicSecret
-                                            - Webhook
-                                            - Grafana
-                                            - MFA
-                                            - SendgridAuthorizationToken
-                                            - MongoDB
-                                            - Federation
-                                            - BasicAuth
-                                            - SSH
-                                            - Neo4j
-                                            - PostgreSql
                                           type: string
                                         name:
                                           description: Specify the name of the generator resource
@@ -40189,28 +39771,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -40403,28 +39963,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -40470,28 +40008,6 @@ spec:
                                               type: string
                                             kind:
                                               description: Specify the Kind of the generator resource
-                                              enum:
-                                                - ACRAccessToken
-                                                - ClusterGenerator
-                                                - ECRAuthorizationToken
-                                                - Fake
-                                                - GCRAccessToken
-                                                - GithubAccessToken
-                                                - QuayAccessToken
-                                                - Password
-                                                - STSSessionToken
-                                                - UUID
-                                                - VaultDynamicSecret
-                                                - Webhook
-                                                - Grafana
-                                                - MFA
-                                                - SendgridAuthorizationToken
-                                                - MongoDB
-                                                - Federation
-                                                - BasicAuth
-                                                - SSH
-                                                - Neo4j
-                                                - PostgreSql
                                               type: string
                                             name:
                                               description: Specify the name of the generator resource
@@ -40637,28 +40153,6 @@ spec:
                                           type: string
                                         kind:
                                           description: Specify the Kind of the generator resource
-                                          enum:
-                                            - ACRAccessToken
-                                            - ClusterGenerator
-                                            - ECRAuthorizationToken
-                                            - Fake
-                                            - GCRAccessToken
-                                            - GithubAccessToken
-                                            - QuayAccessToken
-                                            - Password
-                                            - STSSessionToken
-                                            - UUID
-                                            - VaultDynamicSecret
-                                            - Webhook
-                                            - Grafana
-                                            - MFA
-                                            - SendgridAuthorizationToken
-                                            - MongoDB
-                                            - Federation
-                                            - BasicAuth
-                                            - SSH
-                                            - Neo4j
-                                            - PostgreSql
                                           type: string
                                         name:
                                           description: Specify the name of the generator resource
@@ -43102,28 +42596,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -43316,28 +42788,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
@@ -43383,28 +42833,6 @@ spec:
                                               type: string
                                             kind:
                                               description: Specify the Kind of the generator resource
-                                              enum:
-                                                - ACRAccessToken
-                                                - ClusterGenerator
-                                                - ECRAuthorizationToken
-                                                - Fake
-                                                - GCRAccessToken
-                                                - GithubAccessToken
-                                                - QuayAccessToken
-                                                - Password
-                                                - STSSessionToken
-                                                - UUID
-                                                - VaultDynamicSecret
-                                                - Webhook
-                                                - Grafana
-                                                - MFA
-                                                - SendgridAuthorizationToken
-                                                - MongoDB
-                                                - Federation
-                                                - BasicAuth
-                                                - SSH
-                                                - Neo4j
-                                                - PostgreSql
                                               type: string
                                             name:
                                               description: Specify the name of the generator resource
@@ -43559,28 +42987,6 @@ spec:
                                                 type: string
                                               kind:
                                                 description: Specify the Kind of the generator resource
-                                                enum:
-                                                  - ACRAccessToken
-                                                  - ClusterGenerator
-                                                  - ECRAuthorizationToken
-                                                  - Fake
-                                                  - GCRAccessToken
-                                                  - GithubAccessToken
-                                                  - QuayAccessToken
-                                                  - Password
-                                                  - STSSessionToken
-                                                  - UUID
-                                                  - VaultDynamicSecret
-                                                  - Webhook
-                                                  - Grafana
-                                                  - MFA
-                                                  - SendgridAuthorizationToken
-                                                  - MongoDB
-                                                  - Federation
-                                                  - BasicAuth
-                                                  - SSH
-                                                  - Neo4j
-                                                  - PostgreSql
                                                 type: string
                                               name:
                                                 description: Specify the name of the generator resource
@@ -46024,28 +45430,6 @@ spec:
                                                           type: string
                                                         kind:
                                                           description: Specify the Kind of the generator resource
-                                                          enum:
-                                                            - ACRAccessToken
-                                                            - ClusterGenerator
-                                                            - ECRAuthorizationToken
-                                                            - Fake
-                                                            - GCRAccessToken
-                                                            - GithubAccessToken
-                                                            - QuayAccessToken
-                                                            - Password
-                                                            - STSSessionToken
-                                                            - UUID
-                                                            - VaultDynamicSecret
-                                                            - Webhook
-                                                            - Grafana
-                                                            - MFA
-                                                            - SendgridAuthorizationToken
-                                                            - MongoDB
-                                                            - Federation
-                                                            - BasicAuth
-                                                            - SSH
-                                                            - Neo4j
-                                                            - PostgreSql
                                                           type: string
                                                         name:
                                                           description: Specify the name of the generator resource
@@ -46238,28 +45622,6 @@ spec:
                                                           type: string
                                                         kind:
                                                           description: Specify the Kind of the generator resource
-                                                          enum:
-                                                            - ACRAccessToken
-                                                            - ClusterGenerator
-                                                            - ECRAuthorizationToken
-                                                            - Fake
-                                                            - GCRAccessToken
-                                                            - GithubAccessToken
-                                                            - QuayAccessToken
-                                                            - Password
-                                                            - STSSessionToken
-                                                            - UUID
-                                                            - VaultDynamicSecret
-                                                            - Webhook
-                                                            - Grafana
-                                                            - MFA
-                                                            - SendgridAuthorizationToken
-                                                            - MongoDB
-                                                            - Federation
-                                                            - BasicAuth
-                                                            - SSH
-                                                            - Neo4j
-                                                            - PostgreSql
                                                           type: string
                                                         name:
                                                           description: Specify the name of the generator resource
@@ -46305,28 +45667,6 @@ spec:
                                                     type: string
                                                   kind:
                                                     description: Specify the Kind of the generator resource
-                                                    enum:
-                                                      - ACRAccessToken
-                                                      - ClusterGenerator
-                                                      - ECRAuthorizationToken
-                                                      - Fake
-                                                      - GCRAccessToken
-                                                      - GithubAccessToken
-                                                      - QuayAccessToken
-                                                      - Password
-                                                      - STSSessionToken
-                                                      - UUID
-                                                      - VaultDynamicSecret
-                                                      - Webhook
-                                                      - Grafana
-                                                      - MFA
-                                                      - SendgridAuthorizationToken
-                                                      - MongoDB
-                                                      - Federation
-                                                      - BasicAuth
-                                                      - SSH
-                                                      - Neo4j
-                                                      - PostgreSql
                                                     type: string
                                                   name:
                                                     description: Specify the name of the generator resource
