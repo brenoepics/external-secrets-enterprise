@@ -64,7 +64,8 @@ func (c *JobController) Reconcile(ctx context.Context, req ctrl.Request) (result
 	// Run the Job applying constraints after leaving the reconcile loop
 	defer func() {
 		go func() {
-			err := c.runJob(ctx, jobSpec, j)
+			c.Log.V(1).Info("Starting async job", "job", jobSpec.GetName())
+			err := c.runJob(context.Background(), jobSpec, j)
 			if err != nil {
 				c.Log.Error(err, "failed to run job")
 			}
@@ -113,16 +114,19 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 			LastRunTime: jobTime,
 			RunStatus:   jobStatus,
 		}
+		c.Log.V(1).Info("Updating Job Status", "RunStatus", jobStatus)
 		if err := c.Status().Update(ctx, jobSpec); err != nil {
 			c.Log.Error(err, "failed to update job status")
 		}
 	}()
+	c.Log.V(1).Info("Running Job", "job", jobSpec.GetName())
 	findings, err := j.Run(ctx)
 	if err != nil {
 		jobStatus = v1alpha1.JobRunStatusFailed
 		jobTime = metav1.Now()
 		return err
 	}
+	c.Log.V(1).Info("Found findings for job", "total findings", len(findings))
 	// for each finding, see if it already exists and update it if it does;
 	for _, finding := range findings {
 		req := client.ObjectKey{
@@ -135,12 +139,14 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 			if apierrors.IsNotFound(err) {
 				// Create Finding
 				create := finding.DeepCopy()
+				c.Log.V(1).Info("Creating finding", "finding", create.GetName())
 				if err := c.Create(ctx, create); err != nil {
 					jobStatus = v1alpha1.JobRunStatusFailed
 					jobTime = metav1.Now()
 					return err
 				}
 				create.Status.Locations = finding.Status.Locations
+				c.Log.V(1).Info("Updating finding status", "finding", create.GetName())
 				if err := c.Status().Update(ctx, create); err != nil {
 					jobStatus = v1alpha1.JobRunStatusFailed
 					jobTime = metav1.Now()
@@ -154,6 +160,7 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 		} else {
 			if needsToUpdate(existing, &finding) {
 				existing.Status.Locations = finding.Status.Locations
+				c.Log.V(1).Info("Updating finding", "finding", existing.GetName())
 				if err := c.Status().Update(ctx, existing); err != nil {
 					jobStatus = v1alpha1.JobRunStatusFailed
 					jobTime = metav1.Now()
