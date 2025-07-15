@@ -43,6 +43,10 @@ type PushSecretStoreRef struct {
 	// +optional
 	// +kubebuilder:default="SecretStore"
 	Kind string `json:"kind,omitempty"`
+
+	// Group of the SecretStore resource (SecretStore or ClusterSecretStore, or any Target)
+	// +optional
+	Group string `json:"group,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=Replace;IfNotExists

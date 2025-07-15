@@ -160,6 +160,9 @@ spec:
                               storeRef:
                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                 properties:
+                                  group:
+                                    description: Group if usign other elements such as Targets
+                                    type: string
                                   kind:
                                     description: |-
                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -354,6 +357,9 @@ spec:
                               storeRef:
                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                 properties:
+                                  group:
+                                    description: Group if usign other elements such as Targets
+                                    type: string
                                   kind:
                                     description: |-
                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -392,6 +398,9 @@ spec:
                     secretStoreRef:
                       description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                       properties:
+                        group:
+                          description: Group if usign other elements such as Targets
+                          type: string
                         kind:
                           description: |-
                             Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -1621,6 +1630,9 @@ spec:
                     secretStoreRefs:
                       items:
                         properties:
+                          group:
+                            description: Group of the SecretStore resource (SecretStore or ClusterSecretStore, or any Target)
+                            type: string
                           kind:
                             default: SecretStore
                             description: Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -10955,6 +10967,9 @@ spec:
                           storeRef:
                             description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                             properties:
+                              group:
+                                description: Group if usign other elements such as Targets
+                                type: string
                               kind:
                                 description: |-
                                   Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -11149,6 +11164,9 @@ spec:
                           storeRef:
                             description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                             properties:
+                              group:
+                                description: Group if usign other elements such as Targets
+                                type: string
                               kind:
                                 description: |-
                                   Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -11187,6 +11205,9 @@ spec:
                 secretStoreRef:
                   description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                   properties:
+                    group:
+                      description: Group if usign other elements such as Targets
+                      type: string
                     kind:
                       description: |-
                         Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -12117,6 +12138,9 @@ spec:
                 secretStoreRefs:
                   items:
                     properties:
+                      group:
+                        description: Group of the SecretStore resource (SecretStore or ClusterSecretStore, or any Target)
+                        type: string
                       kind:
                         default: SecretStore
                         description: Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -31263,6 +31287,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -31455,6 +31482,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -31500,6 +31530,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -31566,6 +31599,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -34088,6 +34124,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -34280,6 +34319,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -34325,6 +34367,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -34391,6 +34436,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -36922,6 +36970,9 @@ spec:
                                                     storeRef:
                                                       description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                       properties:
+                                                        group:
+                                                          description: Group if usign other elements such as Targets
+                                                          type: string
                                                         kind:
                                                           description: |-
                                                             Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -37114,6 +37165,9 @@ spec:
                                                     storeRef:
                                                       description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                       properties:
+                                                        group:
+                                                          description: Group if usign other elements such as Targets
+                                                          type: string
                                                         kind:
                                                           description: |-
                                                             Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -37159,6 +37213,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -37225,6 +37282,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -39971,6 +40031,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -40163,6 +40226,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -40208,6 +40274,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -40274,6 +40343,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -42796,6 +42868,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -42988,6 +43063,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -43033,6 +43111,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -43099,6 +43180,9 @@ spec:
                                         storeRef:
                                           description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                           properties:
+                                            group:
+                                              description: Group if usign other elements such as Targets
+                                              type: string
                                             kind:
                                               description: |-
                                                 Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -45630,6 +45714,9 @@ spec:
                                                     storeRef:
                                                       description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                       properties:
+                                                        group:
+                                                          description: Group if usign other elements such as Targets
+                                                          type: string
                                                         kind:
                                                           description: |-
                                                             Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -45822,6 +45909,9 @@ spec:
                                                     storeRef:
                                                       description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                       properties:
+                                                        group:
+                                                          description: Group if usign other elements such as Targets
+                                                          type: string
                                                         kind:
                                                           description: |-
                                                             Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -45867,6 +45957,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)
@@ -45933,6 +46026,9 @@ spec:
                                               storeRef:
                                                 description: SecretStoreRef defines which SecretStore to fetch the ExternalSecret data.
                                                 properties:
+                                                  group:
+                                                    description: Group if usign other elements such as Targets
+                                                    type: string
                                                   kind:
                                                     description: |-
                                                       Kind of the SecretStore resource (SecretStore or ClusterSecretStore)

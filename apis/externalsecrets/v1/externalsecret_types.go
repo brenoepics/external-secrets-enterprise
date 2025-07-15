@@ -30,6 +30,9 @@ type SecretStoreRef struct {
 	// Defaults to `SecretStore`
 	// +optional
 	Kind string `json:"kind,omitempty"`
+	// Group if usign other elements such as Targets
+	// +optional
+	Group string `json:"group,omitempty"`
 }
 
 // ExternalSecretCreationPolicy defines rules on how to create the resulting Secret.
