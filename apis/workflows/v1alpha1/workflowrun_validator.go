@@ -156,7 +156,8 @@ func validateArgumentValue(ctx context.Context, param *Parameter, argValue inter
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
 			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
 			ParameterTypeGenerator, ParameterTypeGeneratorArray,
-			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray:
+			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray,
+			ParameterTypeFinding, ParameterTypeFindingArray:
 			// For string and other types, use the raw value
 			parsedValue = argValue
 		}
@@ -200,7 +201,8 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
 			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
 			ParameterTypeGenerator, ParameterTypeGeneratorArray,
-			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray:
+			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray,
+			ParameterTypeFinding, ParameterTypeFindingArray:
 			// No specific validation needed for these types
 		}
 	}
@@ -243,6 +245,19 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 			}
 		}
 		return nil
+	case ParameterTypeFindingArray:
+		resourceList, err := param.ToFindingParameterTypeArray(value)
+		if err != nil {
+			return err
+		}
+
+		param.Type = ParameterTypeFinding
+		for i := range resourceList {
+			if err := validateKubernetesResource(ctx, param, resourceList[i], namespace); err != nil {
+				return err
+			}
+		}
+		return nil
 	case ParameterTypeSecretStore, ParameterTypeClusterSecretStore:
 		resource, err := param.ToSecretStoreParameterType(value)
 		if err != nil {
@@ -251,6 +266,12 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 		resourceName = resource.Name
 	case ParameterTypeSecretLocation:
 		resource, err := param.ToSecretLocationParameterType(value)
+		if err != nil {
+			return err
+		}
+		resourceName = resource.Name
+	case ParameterTypeFinding:
+		resource, err := param.ToFindingParameterType(value)
 		if err != nil {
 			return err
 		}
@@ -345,6 +366,14 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 			Group:   splittedApiVersion[0],
 			Version: splittedApiVersion[1],
 			Kind:    resource.Kind,
+		}
+	case ParameterTypeFinding, ParameterTypeFindingArray:
+		apiVersion := param.Type.GetAPIVersion()
+		groupVersion := strings.Split(apiVersion, "/")
+		gvk = schema.GroupVersionKind{
+			Group:   groupVersion[0],
+			Version: groupVersion[1],
+			Kind:    param.Type.GetKind(),
 		}
 	}
 
