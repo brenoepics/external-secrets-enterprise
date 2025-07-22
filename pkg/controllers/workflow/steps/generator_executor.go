@@ -17,6 +17,7 @@ import (
 	workflows "github.com/external-secrets/external-secrets/apis/workflows/v1alpha1"
 	"github.com/external-secrets/external-secrets/pkg/controllers/secretstore"
 	"github.com/external-secrets/external-secrets/pkg/controllers/workflow/templates"
+	"github.com/external-secrets/external-secrets/pkg/generator/statemanager"
 	"github.com/external-secrets/external-secrets/pkg/utils"
 	"github.com/external-secrets/external-secrets/pkg/utils/resolvers"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,8 +52,9 @@ func NewGeneratorStepExecutor(step *workflows.GeneratorStep, c client.Client, sc
 
 // Execute generates secret values using the configured generator,
 // applies post-processing, and returns a map of key/value pairs.
-func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf *workflows.Workflow, inputData map[string]interface{}) (map[string]interface{}, error) {
+func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf *workflows.Workflow, inputData map[string]interface{}, jobName string) (map[string]interface{}, error) {
 	output := make(map[string]interface{})
+	log := ctrl.Log.WithName("controllers").WithName("Workflow")
 
 	defer func() {
 		_ = e.Manager.Close(ctx)
@@ -98,9 +100,36 @@ func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf
 	}
 
 	// Use the generator
-	secretMap, _, err := gen.Generate(ctx, obj, e.Client, namespace)
+	secretMap, newGenState, err := gen.Generate(ctx, obj, e.Client, namespace)
 	if err != nil {
 		return nil, fmt.Errorf(errGenerate, err)
+	}
+
+	// Handle generator state
+	if e.Step.AutoCleanup {
+		runTemplate, err := getWorkflowRunTemplateFromWorkflow(ctx, e.Client, wf)
+		if err != nil {
+			return nil, err
+		}
+		generatorState := statemanager.New(ctx, e.Client, e.Scheme, namespace, runTemplate)
+		defer func() {
+			if err != nil {
+				if err := generatorState.Rollback(); err != nil {
+					log.Error(err, "error rolling back generator state")
+				}
+
+				return
+			}
+			if err := generatorState.Commit(); err != nil {
+				log.Error(err, "error committing generator state")
+			}
+		}()
+
+		genStateKey := fmt.Sprintf("%s.%s.%s", wf.Namespace, runTemplate.Name, jobName)
+		if generatorState != nil {
+			generatorState.EnqueueSetLatest(ctx, genStateKey, namespace, obj, gen, newGenState)
+			generatorState.EnqueueMoveStateToGC(genStateKey)
+		}
 	}
 
 	// rewrite the keys if needed
@@ -110,7 +139,6 @@ func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf
 	}
 
 	// validate the keys
-	log := ctrl.Log.WithName("controllers").WithName("Workflow")
 	err = utils.ValidateKeys(log, secretMap)
 	if err != nil {
 		return nil, fmt.Errorf(errInvalidKeys, err)
@@ -127,4 +155,23 @@ func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf
 	}
 
 	return output, nil
+}
+func getWorkflowRunTemplateFromWorkflow(
+	ctx context.Context,
+	c client.Client,
+	wf *workflows.Workflow,
+) (*workflows.WorkflowRunTemplate, error) {
+	runTemplate, ok := wf.GetLabels()["workflows.external-secrets.io/runtemplate"]
+	if !ok {
+		return nil, fmt.Errorf("workflow %q has no WorkflowRunTemplate", wf.Name)
+	}
+	tmpl := &workflows.WorkflowRunTemplate{}
+	if err := c.Get(ctx,
+		client.ObjectKey{Namespace: wf.Namespace, Name: runTemplate},
+		tmpl,
+	); err != nil {
+		return nil, fmt.Errorf("error fetching WorkflowRunTemplate %q: %w", runTemplate, err)
+	}
+
+	return tmpl, nil
 }
