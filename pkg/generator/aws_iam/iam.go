@@ -121,6 +121,14 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, s
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"access_key_id":     "AWS Access Key ID",
+		"secret_access_key": "AWS Secret Access Key",
+	}
+}
+
 func init() {
 	genv1alpha1.Register(genv1alpha1.AWSIAMKeysKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.AWSIAMKeysKind, &genv1alpha1.AWSIAMKey{})
 }

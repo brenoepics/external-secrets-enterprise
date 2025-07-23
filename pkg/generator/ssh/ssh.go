@@ -46,6 +46,13 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"id_rsa":     "Private SSH key in PEM format",
+		"id_rsa.pub": "Public SSH key in authorized_keys format",
+	}
+}
+
 func (g *Generator) generate(jsonSpec *apiextensions.JSON, rsaGen RSAGenerateFunc) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	if jsonSpec == nil {
 		return nil, nil, errors.New(errNoSpec)
@@ -115,4 +122,5 @@ func parseSpec(data []byte) (*genv1alpha1.SSH, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.SSHKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.SSHKind, &genv1alpha1.SSH{})
 }

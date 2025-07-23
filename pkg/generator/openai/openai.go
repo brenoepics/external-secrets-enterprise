@@ -105,6 +105,12 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, p
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"api_key": "OpenAI API key for authentication",
+	}
+}
+
 func newClient(ctx context.Context, spec *genv1alpha1.OpenAISpec, kclient client.Client, ns string) (*openAiClient, error) {
 	host := defaultHost
 	if spec.Host != "" {
@@ -224,5 +230,6 @@ func parseStatus(data []byte) (*genv1alpha1.OpenAiServiceAccountState, error) {
 }
 
 func init() {
-	genv1alpha1.Register(genv1alpha1.OpenAiKind, &Generator{})
+	genv1alpha1.Register(genv1alpha1.OpenAIKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.OpenAIKind, &genv1alpha1.OpenAI{})
 }

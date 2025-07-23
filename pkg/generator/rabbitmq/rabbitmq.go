@@ -180,6 +180,13 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, s
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"password": "Generated password for the RabbitMQ user",
+	}
+}
+
 func init() {
 	genv1alpha1.Register(genv1alpha1.RabbitMQGeneratorKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.RabbitMQGeneratorKind, &genv1alpha1.RabbitMQ{})
 }

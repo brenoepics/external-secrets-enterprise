@@ -54,6 +54,12 @@ func (w *Webhook) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, state
 	return nil
 }
 
+func (w *Webhook) GetKeys() map[string]string {
+	return map[string]string{
+		"<key>": "Each key represents a secret field returned by the webhook server",
+	}
+}
+
 func parseSpec(data []byte) (*webhook.Spec, error) {
 	var spec genv1alpha1.Webhook
 	err := json.Unmarshal(data, &spec)
@@ -71,4 +77,5 @@ func parseSpec(data []byte) (*webhook.Spec, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.WebhookKind, &Webhook{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.WebhookKind, &genv1alpha1.Webhook{})
 }

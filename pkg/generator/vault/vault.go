@@ -65,6 +65,12 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"<key>": "Each key represents a secret field returned dynamically by Vault",
+	}
+}
+
 func (g *Generator) generate(ctx context.Context, c *provider.Provider, jsonSpec *apiextensions.JSON, kube client.Client, corev1 typedcorev1.CoreV1Interface, namespace string) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	if jsonSpec == nil {
 		return nil, nil, errors.New(errNoSpec)
@@ -165,4 +171,5 @@ func parseSpec(data []byte) (*genv1alpha1.VaultDynamicSecret, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.VaultDynamicSecretKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.VaultDynamicSecretKind, &genv1alpha1.VaultDynamicSecret{})
 }

@@ -156,6 +156,13 @@ func (g *MongoDB) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, gen
 	return nil
 }
 
+func (g *MongoDB) GetKeys() map[string]string {
+	return map[string]string{
+		"username": "MongoDB user login name",
+		"password": "MongoDB user password",
+	}
+}
+
 func ensureUser(ctx context.Context, db *mongo.Database, username, password string, rolesSpec []genv1alpha1.MongoDBRole) error {
 	err := manageUser(ctx, db, "createUser", username, password, rolesSpec)
 	if err != nil {
@@ -297,4 +304,5 @@ func (defaultClientFactory) New(ctx context.Context, uri string) (MongoClient, e
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.MongoDBKind, &MongoDB{clientFactory: defaultClientFactory{}})
+	genv1alpha1.RegisterGeneric(genv1alpha1.MongoDBKind, &genv1alpha1.MongoDB{})
 }

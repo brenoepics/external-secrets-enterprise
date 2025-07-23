@@ -61,12 +61,14 @@ type FederationAuthKubernetes struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:metadata:labels="external-secrets.io/component=controller"
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced,categories={external-secrets, external-secrets-generators}
 type Federation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec FederationSpec `json:"spec"`
+	Spec   FederationSpec  `json:"spec"`
+	Status GeneratorStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

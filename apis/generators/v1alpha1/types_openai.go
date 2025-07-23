@@ -85,7 +85,8 @@ type OpenAI struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec OpenAISpec `json:"spec,omitempty"`
+	Spec   OpenAISpec      `json:"spec,omitempty"`
+	Status GeneratorStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

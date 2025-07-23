@@ -60,6 +60,12 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"password": "The generated password",
+	}
+}
+
 func (g *Generator) generate(jsonSpec *apiextensions.JSON, passGen generateFunc) (map[string][]byte, genv1alpha1.GeneratorProviderState, error) {
 	if jsonSpec == nil {
 		return nil, nil, errors.New(errNoSpec)
@@ -131,4 +137,5 @@ func parseSpec(data []byte) (*genv1alpha1.Password, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.PasswordKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.PasswordKind, &genv1alpha1.Password{})
 }

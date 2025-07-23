@@ -55,6 +55,13 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"username": "Basic Auth username",
+		"password": "Basic Auth password",
+	}
+}
+
 func (g *Generator) generate(
 	jsonSpec *apiextensions.JSON,
 	userGen usernameGenerateFunc,
@@ -178,16 +185,6 @@ func generatePassword(
 	return pass, nil
 }
 
-func parseSpec(data []byte) (*genv1alpha1.BasicAuth, error) {
-	var spec genv1alpha1.BasicAuth
-	err := yaml.Unmarshal(data, &spec)
-	return &spec, err
-}
-
-func init() {
-	genv1alpha1.Register(genv1alpha1.BasicAuthKind, &Generator{})
-}
-
 func generateFakeWord(size int) string {
 	word := []byte{}
 	ioReader := rand.Reader
@@ -213,4 +210,15 @@ func generateFakeWord(size int) string {
 	}
 
 	return string(word)
+}
+
+func parseSpec(data []byte) (*genv1alpha1.BasicAuth, error) {
+	var spec genv1alpha1.BasicAuth
+	err := yaml.Unmarshal(data, &spec)
+	return &spec, err
+}
+
+func init() {
+	genv1alpha1.Register(genv1alpha1.BasicAuthKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.BasicAuthKind, &genv1alpha1.BasicAuth{})
 }

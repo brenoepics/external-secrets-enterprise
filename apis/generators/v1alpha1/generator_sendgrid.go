@@ -45,7 +45,8 @@ type SendgridAuthorizationToken struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec SendgridTokenSpec `json:"spec,omitempty"`
+	Spec   SendgridTokenSpec `json:"spec,omitempty"`
+	Status GeneratorStatus   `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

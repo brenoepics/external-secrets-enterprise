@@ -98,6 +98,13 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, _
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"username": "Default login username for Azure Container Registry (ACR)",
+		"password": "Generated ACR access token",
+	}
+}
+
 func (g *Generator) generate(
 	ctx context.Context,
 	jsonSpec *apiextensions.JSON,
@@ -389,4 +396,5 @@ func parseSpec(data []byte) (*genv1alpha1.ACRAccessToken, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.ACRAccessTokenKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.ACRAccessTokenKind, &genv1alpha1.ACRAccessToken{})
 }

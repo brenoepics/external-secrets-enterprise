@@ -73,6 +73,12 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, _
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		defaultLoginUsername: "GitHub personal access token",
+	}
+}
+
 func (g *Generator) generate(
 	ctx context.Context,
 	jsonSpec *apiextensions.JSON,
@@ -209,4 +215,5 @@ func parseSpec(data []byte) (*genv1alpha1.GithubAccessToken, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.GithubAccessTokenKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.GithubAccessTokenKind, &genv1alpha1.GithubAccessToken{})
 }

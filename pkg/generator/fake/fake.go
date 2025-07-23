@@ -53,6 +53,12 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, _
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"<key>": "User-defined key as configured in Spec.Data",
+	}
+}
+
 func parseSpec(data []byte) (*genv1alpha1.Fake, error) {
 	var spec genv1alpha1.Fake
 	err := json.Unmarshal(data, &spec)
@@ -61,4 +67,5 @@ func parseSpec(data []byte) (*genv1alpha1.Fake, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.FakeKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.FakeKind, &genv1alpha1.Fake{})
 }

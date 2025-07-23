@@ -222,6 +222,14 @@ func (g *Generator) Cleanup(ctx context.Context, jsonSpec *apiextensions.JSON, p
 	client := &SendGridClient{}
 	return g.cleanup(ctx, jsonSpec, previousState, kclient, namespace, client)
 }
+
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"apiKey": "SendGrid API key for authenticated API requests",
+	}
+}
+
 func init() {
 	genv1alpha1.Register(genv1alpha1.SendgridKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.SendgridKind, &genv1alpha1.SendgridAuthorizationToken{})
 }

@@ -81,6 +81,13 @@ func (g *Generator) Cleanup(_ context.Context, jsonSpec *apiextensions.JSON, sta
 	return nil
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"token":    "Multi-factor authentication (MFA) token",
+		"timeLeft": "Remaining time before the MFA token expires (in seconds)",
+	}
+}
+
 func parseSpec(data []byte) (*genv1alpha1.MFA, error) {
 	var spec genv1alpha1.MFA
 	err := yaml.Unmarshal(data, &spec)
@@ -89,4 +96,5 @@ func parseSpec(data []byte) (*genv1alpha1.MFA, error) {
 
 func init() {
 	genv1alpha1.Register(genv1alpha1.MFAKind, &Generator{})
+	genv1alpha1.RegisterGeneric(genv1alpha1.MFAKind, &genv1alpha1.MFA{})
 }
