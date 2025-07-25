@@ -155,14 +155,20 @@ func validateArgumentValue(ctx context.Context, param *Parameter, argValue inter
 		case ParameterTypeString, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
 			ParameterTypeNamespace, ParameterTypeSecretStore, ParameterTypeExternalSecret,
 			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
-			ParameterTypeGenerator, ParameterTypeGeneratorArray,
 			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray,
 			ParameterTypeFinding, ParameterTypeFindingArray:
 			// For string and other types, use the raw value
 			parsedValue = argValue
+		case ParameterTypeGenerator, ParameterTypeGeneratorArray, ParameterTypeCustomObject:
+			// Do nothing
 		}
 
 		if param.Type.IsGeneratorType() || param.Type.IsGeneratorArrayType() {
+			parsedValue = argValue
+		}
+
+		ok, err := param.Type.IsCustomObjectType()
+		if err == nil && ok {
 			parsedValue = argValue
 		}
 
@@ -184,6 +190,31 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 		if err := param.ValidateValue(value); err != nil {
 			return err
 		}
+
+		// validate custom objects
+		ok, err := param.Type.IsCustomObjectType()
+		if err != nil {
+			return err
+		}
+
+		if ok {
+			customObject, err := param.ParseCustomObject(value)
+			if err != nil {
+				return err
+			}
+
+			customType := param.Type.ExtractCustomObjectType()
+			tempParam := Parameter{
+				Name: param.Name,
+				Type: customType,
+			}
+			for _, customValue := range customObject {
+				err := validateSingleValue(ctx, &tempParam, customValue, namespace)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	} else {
 		// For individual items in multi-select parameters, perform basic type validation
 		switch param.Type {
@@ -202,7 +233,7 @@ func validateSingleValue(ctx context.Context, param *Parameter, value interface{
 			ParameterTypeClusterSecretStore, ParameterTypeSecretStoreArray,
 			ParameterTypeGenerator, ParameterTypeGeneratorArray,
 			ParameterTypeSecretLocation, ParameterTypeSecretLocationArray,
-			ParameterTypeFinding, ParameterTypeFindingArray:
+			ParameterTypeFinding, ParameterTypeFindingArray, ParameterTypeCustomObject:
 			// No specific validation needed for these types
 		}
 	}
@@ -280,7 +311,7 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 		// should not happen. Generator types will be processed later
 	case ParameterTypeString, ParameterTypeNumber, ParameterTypeBool,
 		ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime,
-		ParameterTypeNamespace, ParameterTypeExternalSecret:
+		ParameterTypeNamespace, ParameterTypeExternalSecret, ParameterTypeCustomObject:
 		str, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("kubernetes resource name must be a string. received: %T", value)
@@ -338,7 +369,8 @@ func validateKubernetesResource(ctx context.Context, param *Parameter, value int
 			Version: param.Type.GetAPIVersion(),
 			Kind:    param.Type.GetKind(),
 		}
-	case ParameterTypeString, ParameterTypeNumber, ParameterTypeBool, ParameterTypeObject, ParameterTypeSecret, ParameterTypeTime:
+	case ParameterTypeString, ParameterTypeNumber, ParameterTypeBool, ParameterTypeObject,
+		ParameterTypeSecret, ParameterTypeTime, ParameterTypeCustomObject:
 		// These are not Kubernetes resource types, but we need to handle them for exhaustive switch
 		gvk = schema.GroupVersionKind{
 			Group:   "",

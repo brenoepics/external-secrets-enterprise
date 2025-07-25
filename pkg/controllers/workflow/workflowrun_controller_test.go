@@ -54,6 +54,10 @@ func (s *WorkflowRunReconcilerTestSuite) SetupTest() {
 	s.builder = fake.NewClientBuilder().WithScheme(s.scheme)
 }
 
+func TestWorkflowRunReconcilerTestSuite(t *testing.T) {
+	suite.Run(t, new(WorkflowRunReconcilerTestSuite))
+}
+
 func (s *WorkflowRunReconcilerTestSuite) TestReconcileWorkflowCreated() {
 	template := &workflows.WorkflowTemplate{
 		TypeMeta: metav1.TypeMeta{
@@ -163,7 +167,7 @@ func (s *WorkflowRunReconcilerTestSuite) TestReconcileTemplateNotFound() {
 	assert.Equal(s.T(), metav1.ConditionFalse, updatedRun.Status.Conditions[0].Status)
 }
 
-func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFindingArray() {
+func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFinding() {
 	// Simulate a Finding resource that returns a location
 	finding := &scanv1alpha1.Finding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -183,9 +187,33 @@ func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFindingA
 		},
 	}
 
-	param := workflows.Parameter{
-		Name: "param1",
-		Type: workflows.ParameterTypeFindingArray,
+	secondFinding := &scanv1alpha1.Finding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "finding2",
+			Namespace: "default",
+		},
+		Status: scanv1alpha1.FindingStatus{
+			Locations: []targetsv1alpha1.SecretInStoreRef{{
+				Name:       "second-secret-store",
+				Kind:       "SecretStore",
+				APIVersion: "external-secrets.io/v1",
+				RemoteRef: targetsv1alpha1.RemoteRef{
+					Key:      "secret-key",
+					Property: "secret-property",
+				},
+			}},
+		},
+	}
+
+	params := []workflows.Parameter{
+		{
+			Name: "param1",
+			Type: workflows.ParameterTypeFinding,
+		},
+		{
+			Name: "param2",
+			Type: workflows.ParameterTypeFindingArray,
+		},
 	}
 
 	template := &workflows.WorkflowTemplate{
@@ -197,15 +225,16 @@ func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFindingA
 			Version: "v1",
 			Name:    "test-template",
 			ParameterGroups: []workflows.ParameterGroup{
-				{Parameters: []workflows.Parameter{param}},
+				{Parameters: params},
 			},
 		},
 	}
 
 	// Arguments: simulate passing a finding array parameter
 	argsJSON, _ := json.Marshal(map[string]any{
-		"param1": []map[string]string{
-			{"name": "finding1"},
+		"param1": map[string]string{"name": "finding1"},
+		"param2": []map[string]string{
+			{"name": "finding2"},
 		},
 	})
 
@@ -222,7 +251,7 @@ func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFindingA
 		},
 	}
 
-	cl := s.builder.WithObjects(finding).Build()
+	cl := s.builder.WithObjects(finding, secondFinding).Build()
 	reconciler := &WorkflowRunReconciler{
 		Client:   cl,
 		Log:      logr.Discard(),
@@ -234,8 +263,141 @@ func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateFindingA
 	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), workflow)
 	assert.Contains(s.T(), string(workflow.Spec.Variables.Raw), "secret-store")
+	assert.Contains(s.T(), string(workflow.Spec.Variables.Raw), "second-secret-store")
 }
 
-func TestWorkflowRunReconcilerTestSuite(t *testing.T) {
-	suite.Run(t, new(WorkflowRunReconcilerTestSuite))
+func (s *WorkflowRunReconcilerTestSuite) TestResolveWorkflowFromTemplateCustomObject() {
+	// Simulate a Finding resource that returns a location
+	finding := &scanv1alpha1.Finding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "finding1",
+			Namespace: "default",
+		},
+		Status: scanv1alpha1.FindingStatus{
+			Locations: []targetsv1alpha1.SecretInStoreRef{{
+				Name:       "secret-store",
+				Kind:       "SecretStore",
+				APIVersion: "external-secrets.io/v1",
+				RemoteRef: targetsv1alpha1.RemoteRef{
+					Key:      "secret-key",
+					Property: "secret-property",
+				},
+			}},
+		},
+	}
+
+	secondFinding := &scanv1alpha1.Finding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "finding2",
+			Namespace: "default",
+		},
+		Status: scanv1alpha1.FindingStatus{
+			Locations: []targetsv1alpha1.SecretInStoreRef{{
+				Name:       "secret-store2",
+				Kind:       "SecretStore",
+				APIVersion: "external-secrets.io/v1",
+				RemoteRef: targetsv1alpha1.RemoteRef{
+					Key:      "secret-key",
+					Property: "secret-property",
+				},
+			}},
+		},
+	}
+
+	params := []workflows.Parameter{
+		{
+			Name: "param1",
+			Type: workflows.ParameterType("object[finding]"),
+		},
+		{
+			Name: "param2",
+			Type: workflows.ParameterType("object[array[finding]]"),
+		},
+	}
+
+	template := &workflows.WorkflowTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "template1",
+			Namespace: "default",
+		},
+		Spec: workflows.WorkflowTemplateSpec{
+			Version: "v1",
+			Name:    "test-template",
+			ParameterGroups: []workflows.ParameterGroup{
+				{Parameters: params},
+			},
+		},
+	}
+
+	argsJSON, _ := json.Marshal(map[string]any{
+		"param1": map[string]interface{}{
+			"key1": map[string]string{"name": "finding1"},
+		},
+		"param2": map[string]interface{}{
+			"key2": []map[string]string{
+				{"name": "finding1"},
+				{"name": "finding2"},
+			},
+		},
+	})
+
+	run := &workflows.WorkflowRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "run1",
+			Namespace: "default",
+		},
+		Spec: workflows.WorkflowRunSpec{
+			TemplateRef: workflows.TemplateRef{Name: "template1"},
+			Arguments: apiextensionsv1.JSON{
+				Raw: argsJSON,
+			},
+		},
+	}
+
+	cl := s.builder.WithObjects(finding, secondFinding).Build()
+	reconciler := &WorkflowRunReconciler{
+		Client:   cl,
+		Log:      logr.Discard(),
+		Scheme:   s.scheme,
+		Recorder: s.recorder,
+	}
+
+	workflow, err := reconciler.resolveWorkflowFromTemplate(context.Background(), template, run)
+	require.NoError(s.T(), err)
+	assert.NotNil(s.T(), workflow)
+
+	var parsed map[string]interface{}
+	err = json.Unmarshal(workflow.Spec.Variables.Raw, &parsed)
+	require.NoError(s.T(), err)
+
+	param1, ok := parsed["param1"].(map[string]interface{})
+	assert.True(s.T(), ok, "param1 should be a map")
+
+	key1, ok := param1["key1"].([]interface{})
+	require.True(s.T(), ok, "key1 should be a list")
+
+	found := false
+	for _, item := range key1 {
+		if m, ok := item.(map[string]interface{}); ok && m["name"] == "secret-store" {
+			found = true
+			break
+		}
+	}
+	assert.True(s.T(), found, "expected to find an object with name 'secret-store' in key1")
+
+	param2, ok := parsed["param2"].(map[string]interface{})
+	assert.True(s.T(), ok, "param2 should be a map")
+
+	key2, ok := param2["key2"].([]interface{})
+	require.True(s.T(), ok, "key1 should be a list")
+
+	found = false
+	for _, item := range key2 {
+		if m, ok := item.(map[string]interface{}); ok && m["name"] == "secret-store" {
+			found = true
+			break
+		}
+	}
+	assert.True(s.T(), found, "expected to find an object with name 'secret-store' in key1")
+	assert.Equal(s.T(), 2, len(key2))
 }
