@@ -161,6 +161,12 @@ func parseSpec(data []byte) (*genv1alpha1.SSHKey, error) {
 	return &spec, err
 }
 
+func (g *Generator) GetKeys() map[string]string {
+	return map[string]string{
+		"privateKey": "The Generated Private SSH Key",
+		"publicKey":  "The Generated Public SSH Key",
+	}
+}
 func init() {
 	genv1alpha1.Register(genv1alpha1.SSHKeyKind, &Generator{})
 }

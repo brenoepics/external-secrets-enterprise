@@ -47,6 +47,8 @@ type SSHKey struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec SSHKeySpec `json:"spec,omitempty"`
+
+	Status GeneratorStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

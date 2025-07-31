@@ -147,25 +147,6 @@ spec:
                                     type: string
                                   kind:
                                     description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                                    enum:
-                                      - ACRAccessToken
-                                      - ClusterGenerator
-                                      - ECRAuthorizationToken
-                                      - Fake
-                                      - GCRAccessToken
-                                      - GithubAccessToken
-                                      - QuayAccessToken
-                                      - Password
-                                      - SSHKey
-                                      - STSSessionToken
-                                      - UUID
-                                      - VaultDynamicSecret
-                                      - Webhook
-                                      - Grafana
-                                      - MFA
->>>>>>> upstream/main
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -365,25 +346,6 @@ spec:
                                     type: string
                                   kind:
                                     description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                                    enum:
-                                      - ACRAccessToken
-                                      - ClusterGenerator
-                                      - ECRAuthorizationToken
-                                      - Fake
-                                      - GCRAccessToken
-                                      - GithubAccessToken
-                                      - QuayAccessToken
-                                      - Password
-                                      - SSHKey
-                                      - STSSessionToken
-                                      - UUID
-                                      - VaultDynamicSecret
-                                      - Webhook
-                                      - Grafana
-                                      - MFA
->>>>>>> upstream/main
                                     type: string
                                   name:
                                     description: Specify the name of the generator resource
@@ -1749,25 +1711,6 @@ spec:
                               type: string
                             kind:
                               description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                              enum:
-                                - ACRAccessToken
-                                - ClusterGenerator
-                                - ECRAuthorizationToken
-                                - Fake
-                                - GCRAccessToken
-                                - GithubAccessToken
-                                - QuayAccessToken
-                                - Password
-                                - SSHKey
-                                - STSSessionToken
-                                - UUID
-                                - VaultDynamicSecret
-                                - Webhook
-                                - Grafana
-                                - MFA
->>>>>>> upstream/main
                               type: string
                             name:
                               description: Specify the name of the generator resource
@@ -11473,25 +11416,6 @@ spec:
                                 type: string
                               kind:
                                 description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                                enum:
-                                  - ACRAccessToken
-                                  - ClusterGenerator
-                                  - ECRAuthorizationToken
-                                  - Fake
-                                  - GCRAccessToken
-                                  - GithubAccessToken
-                                  - QuayAccessToken
-                                  - Password
-                                  - SSHKey
-                                  - STSSessionToken
-                                  - UUID
-                                  - VaultDynamicSecret
-                                  - Webhook
-                                  - Grafana
-                                  - MFA
->>>>>>> upstream/main
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -11691,25 +11615,6 @@ spec:
                                 type: string
                               kind:
                                 description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                                enum:
-                                  - ACRAccessToken
-                                  - ClusterGenerator
-                                  - ECRAuthorizationToken
-                                  - Fake
-                                  - GCRAccessToken
-                                  - GithubAccessToken
-                                  - QuayAccessToken
-                                  - Password
-                                  - SSHKey
-                                  - STSSessionToken
-                                  - UUID
-                                  - VaultDynamicSecret
-                                  - Webhook
-                                  - Grafana
-                                  - MFA
->>>>>>> upstream/main
                                 type: string
                               name:
                                 description: Specify the name of the generator resource
@@ -12776,25 +12681,6 @@ spec:
                           type: string
                         kind:
                           description: Specify the Kind of the generator resource
-<<<<<<< HEAD
-=======
-                          enum:
-                            - ACRAccessToken
-                            - ClusterGenerator
-                            - ECRAuthorizationToken
-                            - Fake
-                            - GCRAccessToken
-                            - GithubAccessToken
-                            - QuayAccessToken
-                            - Password
-                            - SSHKey
-                            - STSSessionToken
-                            - UUID
-                            - VaultDynamicSecret
-                            - Webhook
-                            - Grafana
-                            - MFA
->>>>>>> upstream/main
                           type: string
                         name:
                           description: Specify the name of the generator resource
@@ -24374,7 +24260,28 @@ spec:
                         - robotAccount
                         - serviceAccountRef
                       type: object
-<<<<<<< HEAD
+                    sshKeySpec:
+                      description: SSHKeySpec controls the behavior of the ssh key generator.
+                      properties:
+                        comment:
+                          description: Comment specifies an optional comment for the SSH key
+                          type: string
+                        keySize:
+                          description: |-
+                            KeySize specifies the key size for RSA keys (default: 2048)
+                            For RSA keys: 2048, 3072, 4096
+                            Ignored for ed25519 keys
+                          maximum: 8192
+                          minimum: 256
+                          type: integer
+                        keyType:
+                          default: rsa
+                          description: KeyType specifies the SSH key type (rsa, ed25519)
+                          enum:
+                            - rsa
+                            - ed25519
+                          type: string
+                      type: object
                     sshSpec:
                       description: SSHSpec controls the behavior of the password generator.
                       properties:
@@ -24398,29 +24305,6 @@ spec:
                           required:
                             - bits
                           type: object
-=======
-                    sshKeySpec:
-                      description: SSHKeySpec controls the behavior of the ssh key generator.
-                      properties:
-                        comment:
-                          description: Comment specifies an optional comment for the SSH key
-                          type: string
-                        keySize:
-                          description: |-
-                            KeySize specifies the key size for RSA keys (default: 2048)
-                            For RSA keys: 2048, 3072, 4096
-                            Ignored for ed25519 keys
-                          maximum: 8192
-                          minimum: 256
-                          type: integer
-                        keyType:
-                          default: rsa
-                          description: KeyType specifies the SSH key type (rsa, ed25519)
-                          enum:
-                            - rsa
-                            - ed25519
-                          type: string
->>>>>>> upstream/main
                       type: object
                     stsSessionTokenSpec:
                       properties:
@@ -27728,6 +27612,81 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.18.0
   labels:
     external-secrets.io/component: controller
+  name: sshkeys.generators.external-secrets.io
+spec:
+  group: generators.external-secrets.io
+  names:
+    categories:
+      - external-secrets
+      - external-secrets-generators
+    kind: SSHKey
+    listKind: SSHKeyList
+    plural: sshkeys
+    singular: sshkey
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: SSHKey generates SSH key pairs.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: SSHKeySpec controls the behavior of the ssh key generator.
+              properties:
+                comment:
+                  description: Comment specifies an optional comment for the SSH key
+                  type: string
+                keySize:
+                  description: |-
+                    KeySize specifies the key size for RSA keys (default: 2048)
+                    For RSA keys: 2048, 3072, 4096
+                    Ignored for ed25519 keys
+                  maximum: 8192
+                  minimum: 256
+                  type: integer
+                keyType:
+                  default: rsa
+                  description: KeyType specifies the SSH key type (rsa, ed25519)
+                  enum:
+                    - rsa
+                    - ed25519
+                  type: string
+              type: object
+            status:
+              properties:
+                output:
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  labels:
+    external-secrets.io/component: controller
   name: sshs.generators.external-secrets.io
 spec:
   group: generators.external-secrets.io
@@ -27794,76 +27753,6 @@ spec:
               properties:
                 output:
                   x-kubernetes-preserve-unknown-fields: true
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
-  labels:
-    external-secrets.io/component: controller
-  name: sshkeys.generators.external-secrets.io
-spec:
-  group: generators.external-secrets.io
-  names:
-    categories:
-      - external-secrets
-      - external-secrets-generators
-    kind: SSHKey
-    listKind: SSHKeyList
-    plural: sshkeys
-    singular: sshkey
-  scope: Namespaced
-  versions:
-    - name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          description: SSHKey generates SSH key pairs.
-          properties:
-            apiVersion:
-              description: |-
-                APIVersion defines the versioned schema of this representation of an object.
-                Servers should convert recognized schemas to the latest internal value, and
-                may reject unrecognized values.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-              type: string
-            kind:
-              description: |-
-                Kind is a string value representing the REST resource this object represents.
-                Servers may infer this from the endpoint the client submits requests to.
-                Cannot be updated.
-                In CamelCase.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: SSHKeySpec controls the behavior of the ssh key generator.
-              properties:
-                comment:
-                  description: Comment specifies an optional comment for the SSH key
-                  type: string
-                keySize:
-                  description: |-
-                    KeySize specifies the key size for RSA keys (default: 2048)
-                    For RSA keys: 2048, 3072, 4096
-                    Ignored for ed25519 keys
-                  maximum: 8192
-                  minimum: 256
-                  type: integer
-                keyType:
-                  default: rsa
-                  description: KeyType specifies the SSH key type (rsa, ed25519)
-                  enum:
-                    - rsa
-                    - ed25519
-                  type: string
               type: object
           type: object
       served: true
@@ -30336,6 +30225,7 @@ spec:
                                         - GithubAccessToken
                                         - QuayAccessToken
                                         - Password
+                                        - SSHKey
                                         - STSSessionToken
                                         - UUID
                                         - VaultDynamicSecret
@@ -31564,6 +31454,28 @@ spec:
                                           required:
                                             - robotAccount
                                             - serviceAccountRef
+                                          type: object
+                                        sshKeySpec:
+                                          description: SSHKeySpec controls the behavior of the ssh key generator.
+                                          properties:
+                                            comment:
+                                              description: Comment specifies an optional comment for the SSH key
+                                              type: string
+                                            keySize:
+                                              description: |-
+                                                KeySize specifies the key size for RSA keys (default: 2048)
+                                                For RSA keys: 2048, 3072, 4096
+                                                Ignored for ed25519 keys
+                                              maximum: 8192
+                                              minimum: 256
+                                              type: integer
+                                            keyType:
+                                              default: rsa
+                                              description: KeyType specifies the SSH key type (rsa, ed25519)
+                                              enum:
+                                                - rsa
+                                                - ed25519
+                                              type: string
                                           type: object
                                         sshSpec:
                                           description: SSHSpec controls the behavior of the password generator.
@@ -33264,6 +33176,7 @@ spec:
                                         - GithubAccessToken
                                         - QuayAccessToken
                                         - Password
+                                        - SSHKey
                                         - STSSessionToken
                                         - UUID
                                         - VaultDynamicSecret
@@ -34492,6 +34405,28 @@ spec:
                                           required:
                                             - robotAccount
                                             - serviceAccountRef
+                                          type: object
+                                        sshKeySpec:
+                                          description: SSHKeySpec controls the behavior of the ssh key generator.
+                                          properties:
+                                            comment:
+                                              description: Comment specifies an optional comment for the SSH key
+                                              type: string
+                                            keySize:
+                                              description: |-
+                                                KeySize specifies the key size for RSA keys (default: 2048)
+                                                For RSA keys: 2048, 3072, 4096
+                                                Ignored for ed25519 keys
+                                              maximum: 8192
+                                              minimum: 256
+                                              type: integer
+                                            keyType:
+                                              default: rsa
+                                              description: KeyType specifies the SSH key type (rsa, ed25519)
+                                              enum:
+                                                - rsa
+                                                - ed25519
+                                              type: string
                                           type: object
                                         sshSpec:
                                           description: SSHSpec controls the behavior of the password generator.
@@ -36201,6 +36136,7 @@ spec:
                                               - GithubAccessToken
                                               - QuayAccessToken
                                               - Password
+                                              - SSHKey
                                               - STSSessionToken
                                               - UUID
                                               - VaultDynamicSecret
@@ -37429,6 +37365,28 @@ spec:
                                                 required:
                                                   - robotAccount
                                                   - serviceAccountRef
+                                                type: object
+                                              sshKeySpec:
+                                                description: SSHKeySpec controls the behavior of the ssh key generator.
+                                                properties:
+                                                  comment:
+                                                    description: Comment specifies an optional comment for the SSH key
+                                                    type: string
+                                                  keySize:
+                                                    description: |-
+                                                      KeySize specifies the key size for RSA keys (default: 2048)
+                                                      For RSA keys: 2048, 3072, 4096
+                                                      Ignored for ed25519 keys
+                                                    maximum: 8192
+                                                    minimum: 256
+                                                    type: integer
+                                                  keyType:
+                                                    default: rsa
+                                                    description: KeyType specifies the SSH key type (rsa, ed25519)
+                                                    enum:
+                                                      - rsa
+                                                      - ed25519
+                                                    type: string
                                                 type: object
                                               sshSpec:
                                                 description: SSHSpec controls the behavior of the password generator.
@@ -39353,6 +39311,7 @@ spec:
                                         - GithubAccessToken
                                         - QuayAccessToken
                                         - Password
+                                        - SSHKey
                                         - STSSessionToken
                                         - UUID
                                         - VaultDynamicSecret
@@ -40581,6 +40540,28 @@ spec:
                                           required:
                                             - robotAccount
                                             - serviceAccountRef
+                                          type: object
+                                        sshKeySpec:
+                                          description: SSHKeySpec controls the behavior of the ssh key generator.
+                                          properties:
+                                            comment:
+                                              description: Comment specifies an optional comment for the SSH key
+                                              type: string
+                                            keySize:
+                                              description: |-
+                                                KeySize specifies the key size for RSA keys (default: 2048)
+                                                For RSA keys: 2048, 3072, 4096
+                                                Ignored for ed25519 keys
+                                              maximum: 8192
+                                              minimum: 256
+                                              type: integer
+                                            keyType:
+                                              default: rsa
+                                              description: KeyType specifies the SSH key type (rsa, ed25519)
+                                              enum:
+                                                - rsa
+                                                - ed25519
+                                              type: string
                                           type: object
                                         sshSpec:
                                           description: SSHSpec controls the behavior of the password generator.
@@ -42281,6 +42262,7 @@ spec:
                                         - GithubAccessToken
                                         - QuayAccessToken
                                         - Password
+                                        - SSHKey
                                         - STSSessionToken
                                         - UUID
                                         - VaultDynamicSecret
@@ -43509,6 +43491,28 @@ spec:
                                           required:
                                             - robotAccount
                                             - serviceAccountRef
+                                          type: object
+                                        sshKeySpec:
+                                          description: SSHKeySpec controls the behavior of the ssh key generator.
+                                          properties:
+                                            comment:
+                                              description: Comment specifies an optional comment for the SSH key
+                                              type: string
+                                            keySize:
+                                              description: |-
+                                                KeySize specifies the key size for RSA keys (default: 2048)
+                                                For RSA keys: 2048, 3072, 4096
+                                                Ignored for ed25519 keys
+                                              maximum: 8192
+                                              minimum: 256
+                                              type: integer
+                                            keyType:
+                                              default: rsa
+                                              description: KeyType specifies the SSH key type (rsa, ed25519)
+                                              enum:
+                                                - rsa
+                                                - ed25519
+                                              type: string
                                           type: object
                                         sshSpec:
                                           description: SSHSpec controls the behavior of the password generator.
@@ -45218,6 +45222,7 @@ spec:
                                               - GithubAccessToken
                                               - QuayAccessToken
                                               - Password
+                                              - SSHKey
                                               - STSSessionToken
                                               - UUID
                                               - VaultDynamicSecret
@@ -46446,6 +46451,28 @@ spec:
                                                 required:
                                                   - robotAccount
                                                   - serviceAccountRef
+                                                type: object
+                                              sshKeySpec:
+                                                description: SSHKeySpec controls the behavior of the ssh key generator.
+                                                properties:
+                                                  comment:
+                                                    description: Comment specifies an optional comment for the SSH key
+                                                    type: string
+                                                  keySize:
+                                                    description: |-
+                                                      KeySize specifies the key size for RSA keys (default: 2048)
+                                                      For RSA keys: 2048, 3072, 4096
+                                                      Ignored for ed25519 keys
+                                                    maximum: 8192
+                                                    minimum: 256
+                                                    type: integer
+                                                  keyType:
+                                                    default: rsa
+                                                    description: KeyType specifies the SSH key type (rsa, ed25519)
+                                                    enum:
+                                                      - rsa
+                                                      - ed25519
+                                                    type: string
                                                 type: object
                                               sshSpec:
                                                 description: SSHSpec controls the behavior of the password generator.
