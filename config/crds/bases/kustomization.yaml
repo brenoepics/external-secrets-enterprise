@@ -29,9 +29,13 @@ resources:
   - generators.external-secrets.io_passwords.yaml
   - generators.external-secrets.io_postgresqls.yaml
   - generators.external-secrets.io_quayaccesstokens.yaml
+<<<<<<< HEAD
   - generators.external-secrets.io_rabbitmqs.yaml
   - generators.external-secrets.io_sendgridauthorizationtokens.yaml
   - generators.external-secrets.io_sshs.yaml
+=======
+  - generators.external-secrets.io_sshkeys.yaml
+>>>>>>> upstream/main
   - generators.external-secrets.io_stssessiontokens.yaml
   - generators.external-secrets.io_uuids.yaml
   - generators.external-secrets.io_vaultdynamicsecrets.yaml

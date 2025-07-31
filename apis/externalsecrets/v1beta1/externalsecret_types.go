@@ -441,8 +441,12 @@ type GeneratorRef struct {
 	APIVersion string `json:"apiVersion,omitempty"`
 
 	// Specify the Kind of the generator resource
+<<<<<<< HEAD
 	//nolint:lll
 	// +kubebuilder:validation:Enum=ACRAccessToken;ClusterGenerator;ECRAuthorizationToken;Fake;GCRAccessToken;GithubAccessToken;QuayAccessToken;Password;STSSessionToken;UUID;VaultDynamicSecret;Webhook;Grafana;AWSIAMKey;SendgridAuthorizationToken;RabbitMQ;MongoDB;Federation;BasicAuth;SSH;Neo4j;PostgreSql;OpenAI
+=======
+	// +kubebuilder:validation:Enum=ACRAccessToken;ClusterGenerator;ECRAuthorizationToken;Fake;GCRAccessToken;GithubAccessToken;QuayAccessToken;Password;SSHKey;STSSessionToken;UUID;VaultDynamicSecret;Webhook;Grafana
+>>>>>>> upstream/main
 	Kind string `json:"kind"`
 
 	// Specify the name of the generator resource
