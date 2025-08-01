@@ -769,7 +769,7 @@ func TestNewGeneratorSession_AssumeRoleWithDefaultCredentials(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "BASE_SECRET_KEY")
 
 	stsProviderCalled := false
-	cfg, err := NewGeneratorSession(context.Background(), esv1.AWSAuth{}, "arn:aws:iam::123456789012:role/assumed-role", "us-east-1", clientfake.NewClientBuilder().Build(), "test-ns", func(cfg aws.Config) STSprovider {
+	cfg, err := NewGeneratorSession(context.Background(), esv1.AWSAuth{}, "arn:aws:iam::123456789012:role/assumed-role", "us-east-1", clientfake.NewClientBuilder().Build(), "test-ns", func(cfg *aws.Config) STSprovider {
 		stsProviderCalled = true
 		creds, err := cfg.Credentials.Retrieve(context.Background())
 		assert.NoError(t, err)

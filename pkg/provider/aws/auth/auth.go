@@ -207,13 +207,8 @@ func NewGeneratorSession(ctx context.Context, auth esv1.AWSAuth, role, region st
 	}
 
 	if role != "" {
-<<<<<<< HEAD
-		stsclient := assumeRoler(config)
-		config.Credentials = stscreds.NewAssumeRoleProvider(stsclient, role)
-=======
-		stsclient := assumeRoler(awscfg)
+		stsclient := assumeRoler(&awscfg)
 		awscfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, role)
->>>>>>> upstream/main
 	}
 	log.Info("using aws config", "region", awscfg.Region, "credentials", awscfg.Credentials)
 	return &awscfg, nil
