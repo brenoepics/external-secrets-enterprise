@@ -41,10 +41,12 @@ type CleanupPolicy struct {
 	// Used only when type is "idle".
 	// +optional
 	// +kubebuilder:validation:Format=duration
+	// +kubebuilder:default="24h"
 	IdleTimeout metav1.Duration `json:"idleTimeout,omitempty"`
 
 	// GracePeriod is the amount of time to wait before deleting a secret.
 	// +optional
 	// +kubebuilder:validation:Format=duration
+	// +kubebuilder:default="2m"
 	GracePeriod metav1.Duration `json:"gracePeriod,omitempty"`
 }

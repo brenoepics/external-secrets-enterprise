@@ -24014,10 +24014,12 @@ spec:
                           description: CleanupPolicy controls the behavior of the cleanup process
                           properties:
                             gracePeriod:
+                              default: 2m
                               description: GracePeriod is the amount of time to wait before deleting a secret.
                               format: duration
                               type: string
                             idleTimeout:
+                              default: 24h
                               description: |-
                                 IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                 Used only when type is "idle".
@@ -26937,10 +26939,12 @@ spec:
                   description: CleanupPolicy controls the behavior of the cleanup process
                   properties:
                     gracePeriod:
+                      default: 2m
                       description: GracePeriod is the amount of time to wait before deleting a secret.
                       format: duration
                       type: string
                     idleTimeout:
+                      default: 24h
                       description: |-
                         IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                         Used only when type is "idle".
@@ -31263,10 +31267,12 @@ spec:
                                               description: CleanupPolicy controls the behavior of the cleanup process
                                               properties:
                                                 gracePeriod:
+                                                  default: 2m
                                                   description: GracePeriod is the amount of time to wait before deleting a secret.
                                                   format: duration
                                                   type: string
                                                 idleTimeout:
+                                                  default: 24h
                                                   description: |-
                                                     IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                     Used only when type is "idle".
@@ -34240,10 +34246,12 @@ spec:
                                               description: CleanupPolicy controls the behavior of the cleanup process
                                               properties:
                                                 gracePeriod:
+                                                  default: 2m
                                                   description: GracePeriod is the amount of time to wait before deleting a secret.
                                                   format: duration
                                                   type: string
                                                 idleTimeout:
+                                                  default: 24h
                                                   description: |-
                                                     IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                     Used only when type is "idle".
@@ -37226,10 +37234,12 @@ spec:
                                                     description: CleanupPolicy controls the behavior of the cleanup process
                                                     properties:
                                                       gracePeriod:
+                                                        default: 2m
                                                         description: GracePeriod is the amount of time to wait before deleting a secret.
                                                         format: duration
                                                         type: string
                                                       idleTimeout:
+                                                        default: 24h
                                                         description: |-
                                                           IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                           Used only when type is "idle".
@@ -40427,10 +40437,12 @@ spec:
                                               description: CleanupPolicy controls the behavior of the cleanup process
                                               properties:
                                                 gracePeriod:
+                                                  default: 2m
                                                   description: GracePeriod is the amount of time to wait before deleting a secret.
                                                   format: duration
                                                   type: string
                                                 idleTimeout:
+                                                  default: 24h
                                                   description: |-
                                                     IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                     Used only when type is "idle".
@@ -43404,10 +43416,12 @@ spec:
                                               description: CleanupPolicy controls the behavior of the cleanup process
                                               properties:
                                                 gracePeriod:
+                                                  default: 2m
                                                   description: GracePeriod is the amount of time to wait before deleting a secret.
                                                   format: duration
                                                   type: string
                                                 idleTimeout:
+                                                  default: 24h
                                                   description: |-
                                                     IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                     Used only when type is "idle".
@@ -46390,10 +46404,12 @@ spec:
                                                     description: CleanupPolicy controls the behavior of the cleanup process
                                                     properties:
                                                       gracePeriod:
+                                                        default: 2m
                                                         description: GracePeriod is the amount of time to wait before deleting a secret.
                                                         format: duration
                                                         type: string
                                                       idleTimeout:
+                                                        default: 24h
                                                         description: |-
                                                           IdleTimeout Indicates how long without activity a secret is considered inactive and can be removed.
                                                           Used only when type is "idle".
