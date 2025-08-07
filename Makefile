@@ -164,7 +164,11 @@ manifests: helm.generate ## Generate manifests from helm chart
 	helm template external-secrets $(HELM_DIR) -f deploy/manifests/helm-values.yaml > $(OUTPUT_DIR)/deploy/manifests/external-secrets.yaml
 
 crds.install: generate ## Install CRDs into a cluster. This is for convenience
+<<<<<<< HEAD
 	kubectl apply --server-side -f $(BUNDLE_DIR)
+=======
+	kubectl apply -f $(BUNDLE_DIR) --server-side
+>>>>>>> upstream/main
 
 crds.uninstall: ## Uninstall CRDs from a cluster. This is for convenience
 	kubectl delete -f $(BUNDLE_DIR)

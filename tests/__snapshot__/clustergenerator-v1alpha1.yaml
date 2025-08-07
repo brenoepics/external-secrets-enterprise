@@ -206,10 +206,13 @@ spec:
       comment: string
       keySize: 256
       keyType: "rsa"
+<<<<<<< HEAD
     sshSpec:
       keyType: "RSA"
       rsaConfig:
         bits: 4096
+=======
+>>>>>>> upstream/main
     stsSessionTokenSpec:
       auth:
         jwt:
@@ -389,6 +392,10 @@ spec:
           name: string
       timeout: string
       url: string
+<<<<<<< HEAD
   kind: "ACRAccessToken" # "ACRAccessToken", "ECRAuthorizationToken", "Fake", "GCRAccessToken", "GithubAccessToken", "QuayAccessToken", "Password", "SSHKey", "STSSessionToken", "UUID", "VaultDynamicSecret", "Webhook", "Grafana", "Federation", "MFA", "BasicAuth", "SSH", "Neo4j", "PostgreSql", "OpenAI"
 status:
   output: 
+=======
+  kind: "ACRAccessToken" # "ACRAccessToken", "ECRAuthorizationToken", "Fake", "GCRAccessToken", "GithubAccessToken", "QuayAccessToken", "Password", "SSHKey", "STSSessionToken", "UUID", "VaultDynamicSecret", "Webhook", "Grafana"
+>>>>>>> upstream/main
