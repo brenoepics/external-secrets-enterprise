@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.17.0](https://github.com/external-secrets-inc/external-secrets-enterprise/compare/v1.16.3...v1.17.0) (2025-08-07)
+
+
+### Features
+
+* migration from endpoint to endpointslice ([#5008](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/5008)) ([e212695](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/e21269538d1e987820935be68673b2ac99d76a73))
+
+
+### Bug Fixes
+
+* check-diff ([e00a30e](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/e00a30e0e470c1e86e50e84d43567a70b8e9a1cb))
+* conflicts ([814c3a6](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/814c3a676b1b74bb21cf580de6f5e4be491d7049))
+* fail helm install if ClusterPushSecrets processing is enabled but PushSecrets processing is disabled. ([#4896](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/4896)) ([3c847e3](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/3c847e36c35b770063fa73fb3ed004097453cb41))
+* make secretstore change/addition/update to trigger scan jobs ([#406](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/406)) ([d169979](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/d169979b6c1396fa1dcc1f4465aad357149d5099))
+* move folders to enterprise ([#348](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/348)) ([e00a30e](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/e00a30e0e470c1e86e50e84d43567a70b8e9a1cb))
+* update dependencies ([#354](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/354)) ([5d3b9c0](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/5d3b9c0b7eec8d6f1d83839d811f83aad116798d))
+* update from upstream ([#355](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/355)) ([577fa3b](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/577fa3b751bf86c5c762a6a9ccfedf3d933d65af))
+* use server-side apply for CRD installation in Makefile ([#5103](https://github.com/external-secrets-inc/external-secrets-enterprise/issues/5103)) ([2bdee92](https://github.com/external-secrets-inc/external-secrets-enterprise/commit/2bdee9240dd1c3b26d3e6aef72e2cc97588023b5))
+
 ## [1.16.3](https://github.com/external-secrets-inc/external-secrets-enterprise/compare/v1.16.2...v1.16.3) (2025-08-04)
 
 
