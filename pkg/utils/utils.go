@@ -834,7 +834,6 @@ func getCertFromConfigMap(ctx context.Context, namespace string, c client.Client
 	return []byte(val), nil
 }
 
-<<<<<<< HEAD
 func GenerateRandomString(size int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -849,7 +848,8 @@ func GenerateRandomString(size int) (string, error) {
 		b[i] = charset[n.Int64()]
 	}
 	return string(b), nil
-=======
+}
+
 func CheckEndpointSlicesReady(ctx context.Context, c client.Client, svcName, svcNamespace string) error {
 	var sliceList discoveryv1.EndpointSliceList
 	err := c.List(ctx, &sliceList,
@@ -874,5 +874,4 @@ func CheckEndpointSlicesReady(ctx context.Context, c client.Client, svcName, svc
 		return errAddressesNotReady
 	}
 	return nil
->>>>>>> upstream/main
 }
