@@ -198,11 +198,7 @@ helm.schema.plugin:
 
 helm.schema.update: helm.schema.plugin
 	@$(INFO) Generating values.schema.json
-<<<<<<< HEAD
-	@helm schema -f $(HELM_DIR)/values.yaml --output $(HELM_DIR)/values.schema.json
-=======
 	@helm schema --values $(HELM_DIR)/values.yaml --output $(HELM_DIR)/values.schema.json
->>>>>>> upstream/main
 	@$(OK) Generated values.schema.json
 
 helm.generate:

@@ -670,7 +670,6 @@
                 }
             }
         },
-<<<<<<< HEAD
         "spire": {
             "type": "object",
             "properties": {
@@ -700,8 +699,6 @@
                 }
             }
         },
-=======
->>>>>>> upstream/main
         "strategy": {
             "type": "object"
         },
