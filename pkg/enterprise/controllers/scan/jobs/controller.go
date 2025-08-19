@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	_ "github.com/external-secrets/external-secrets/pkg/targets/register"
+	_ "github.com/external-secrets/external-secrets/pkg/enterprise/targets/register"
 )
 
 type JobController struct {
@@ -285,7 +285,7 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 			// Update Finding
 			current.Status.Locations = finding.Status.Locations
 			c.Log.V(1).Info("Updating finding", "finding", current.GetName())
-			if err := c.Update(ctx, current); err != nil {
+			if err := c.Status().Update(ctx, current); err != nil {
 				jobStatus = v1alpha1.JobRunStatusFailed
 				jobTime = metav1.Now()
 				return err
