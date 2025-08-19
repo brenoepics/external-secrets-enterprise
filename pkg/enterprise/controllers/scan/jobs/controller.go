@@ -156,9 +156,10 @@ func needsToUpdate(existing, finding *v1alpha1.Finding) bool {
 	}
 	loc1 := existing.Status.Locations
 	loc2 := finding.Status.Locations
-	return !slices.EqualFunc(loc1, loc2, func(a, b tgtv1alpha1.SecretInStoreRef) bool {
+
+	return !(slices.EqualFunc(loc1, loc2, func(a, b tgtv1alpha1.SecretInStoreRef) bool {
 		return a.Name == b.Name && a.Kind == b.Kind && a.APIVersion == b.APIVersion && a.RemoteRef.Key == b.RemoteRef.Key && a.RemoteRef.Property == b.RemoteRef.Property
-	})
+	}) && finding.Spec.Hash == existing.Spec.Hash)
 }
 
 // SetupWithManager returns a new controller builder that will be started by the provided Manager.
@@ -241,58 +242,58 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 	c.Log.V(1).Info("Found findings for job", "total findings", len(findings))
 	// for each finding, see if it already exists and update it if it does;
 	currentFindings := &v1alpha1.FindingList{}
-	currentFindingsMap := make(map[string]*v1alpha1.Finding)
-	findingsMap := make(map[string]*v1alpha1.Finding)
 	c.Log.V(1).Info("Listing Current findings")
 	if err := c.List(ctx, currentFindings, client.InNamespace(jobSpec.Namespace)); err != nil {
 		return err
 	}
 	c.Log.V(1).Info("Found Current findings", "total findings", len(currentFindings.Items))
-	for _, finding := range currentFindings.Items {
-		currentFindingsMap[finding.Spec.Hash] = &finding
+
+	currentFindingsByID := map[string]*v1alpha1.Finding{}
+	for i := range currentFindings.Items {
+		f := &currentFindings.Items[i]
+		id := f.Spec.ID
+		if id == "" {
+			continue
+		} // legacy; can be handled separately
+		currentFindingsByID[id] = f
 	}
-	for _, finding := range findings {
-		findingsMap[finding.Spec.Hash] = &finding
+
+	newFindingsByHash := map[string]*v1alpha1.Finding{}
+	for i := range findings {
+		f := &findings[i]
+		newFindingsByHash[f.Spec.Hash] = f
 	}
-	// Delete Findings that are no longer found
-	c.Log.V(1).Info("Deleting Current findings")
-	for _, current := range currentFindingsMap {
-		finding, ok := findingsMap[current.Spec.Hash]
-		if !ok {
-			c.Log.V(1).Info("Deleting finding", "finding", current.GetName())
-			if err := c.Delete(ctx, current); err != nil {
-				jobStatus = v1alpha1.JobRunStatusFailed
-				jobTime = metav1.Now()
-				return err
-			}
-		}
-		// If names changed, we should recreate
-		if finding != nil && finding.GetName() != current.GetName() {
-			c.Log.V(1).Info("Deleting finding", "finding", current.GetName())
-			if err := c.Delete(ctx, current); err != nil {
-				jobStatus = v1alpha1.JobRunStatusFailed
-				jobTime = metav1.Now()
-				return err
-			}
-		}
-	}
-	// Create or Update Findings that exist
-	for _, finding := range findingsMap {
-		if current, ok := currentFindingsMap[finding.Spec.Hash]; ok {
-			if !needsToUpdate(current, finding) {
+
+	assigned := utils.AssignIDs(currentFindings.Items, findings, utils.JaccardParams{MinJaccard: 0.7, MinIntersection: 2})
+	seenIDs := make(map[string]struct{}, len(assigned))
+
+	for i, assignedFinding := range assigned {
+		newFinding := newFindingsByHash[findings[i].Spec.Hash]
+		newFinding.Spec.ID = assignedFinding.Spec.ID
+		seenIDs[assignedFinding.Spec.ID] = struct{}{}
+
+		if currentFinding, ok := currentFindingsByID[assignedFinding.Spec.ID]; ok {
+			if !needsToUpdate(currentFinding, newFinding) {
 				continue
 			}
 			// Update Finding
-			current.Status.Locations = finding.Status.Locations
-			c.Log.V(1).Info("Updating finding", "finding", current.GetName())
-			if err := c.Status().Update(ctx, current); err != nil {
+			currentFinding.Status.Locations = newFinding.Status.Locations
+			c.Log.V(1).Info("Updating finding", "finding", currentFinding.Spec.ID)
+			if err := c.Status().Update(ctx, currentFinding); err != nil {
+				jobStatus = v1alpha1.JobRunStatusFailed
+				jobTime = metav1.Now()
+				return err
+			}
+
+			currentFinding.Spec.Hash = newFinding.Spec.Hash
+			if err := c.Update(ctx, currentFinding); err != nil {
 				jobStatus = v1alpha1.JobRunStatusFailed
 				jobTime = metav1.Now()
 				return err
 			}
 		} else {
-			// Create Finding
-			create := finding.DeepCopy()
+			// create new CR with stable name
+			create := newFinding.DeepCopy()
 			create.SetNamespace(jobSpec.Namespace)
 			c.Log.V(1).Info("Creating finding", "finding", create.GetName())
 			if err := c.Create(ctx, create); err != nil {
@@ -300,7 +301,7 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 				jobTime = metav1.Now()
 				return err
 			}
-			create.Status.Locations = finding.Status.Locations
+			create.Status.Locations = newFinding.Status.Locations
 			c.Log.V(1).Info("Updating finding status", "finding", create.GetName())
 			if err := c.Status().Update(ctx, create); err != nil {
 				jobStatus = v1alpha1.JobRunStatusFailed
@@ -309,6 +310,19 @@ func (c *JobController) runJob(ctx context.Context, jobSpec *v1alpha1.Job, j *ut
 			}
 		}
 	}
+
+	// Delete Findings that are no longer found
+	for id, currentFinding := range currentFindingsByID {
+		if _, ok := seenIDs[id]; !ok {
+			c.Log.V(1).Info("Deleting stale finding (not observed this run)", "id", id, "name", currentFinding.GetName())
+			if err := c.Delete(ctx, currentFinding); err != nil {
+				jobStatus = v1alpha1.JobRunStatusFailed
+				jobTime = metav1.Now()
+				return err
+			}
+		}
+	}
+
 	jobStatus = v1alpha1.JobRunStatusSucceeded
 	jobTime = metav1.Now()
 	observedSecretStoresDigest = calculateDigest(usedStores)

@@ -15,7 +15,6 @@ import (
 
 	"github.com/external-secrets/external-secrets/apis/enterprise/scan/v1alpha1"
 	tgtv1alpha1 "github.com/external-secrets/external-secrets/apis/enterprise/targets/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -155,28 +154,41 @@ func (ms *MemorySet) GetDuplicates() []v1alpha1.Finding {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
 
-	var findings []v1alpha1.Finding
+	findings := make([]v1alpha1.Finding, 0, len(ms.valueToKeys))
 	for hash, keys := range ms.valueToKeys {
-		if len(keys) > 1 {
-			finding := v1alpha1.Finding{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: getNameFor(keys),
-				},
-				Spec: v1alpha1.FindingSpec{
-					Hash: hash,
-				},
-			}
-			for _, key := range keys {
-				finding.Status.Locations = append(finding.Status.Locations, key)
-			}
-			findings = append(findings, finding)
+		if len(keys) < 2 {
+			continue
 		}
+
+		finding := v1alpha1.Finding{
+			Spec: v1alpha1.FindingSpec{
+				Hash: hash,
+			},
+		}
+		for _, key := range keys {
+			finding.Status.Locations = append(finding.Status.Locations, key)
+		}
+		SortLocations(finding.Status.Locations)
+		finding.Spec.Label = Sanitize(finding.Status.Locations[0])
+		findings = append(findings, finding)
 	}
 	return findings
 }
 
-func getNameFor(keys []tgtv1alpha1.SecretInStoreRef) string {
-	slices.SortFunc(keys, func(a, b tgtv1alpha1.SecretInStoreRef) int {
+func Sanitize(ref tgtv1alpha1.SecretInStoreRef) string {
+	cleanedName := strings.ToLower(strings.TrimSpace(ref.Name))
+	cleanedKind := strings.ToLower(strings.TrimSpace(ref.Kind))
+	cleanedKey := strings.TrimSuffix(strings.TrimPrefix(ref.RemoteRef.Key, "/"), "/")
+	ans := cleanedKind + "." + cleanedName + "." + cleanedKey
+	if ref.RemoteRef.Property != "" {
+		cleanedProperty := strings.TrimSuffix(strings.TrimPrefix(ref.RemoteRef.Property, "/"), "/")
+		ans += "." + cleanedProperty
+	}
+	return strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(ans, "_", "-"), "/", "-"), ":", "-"))
+}
+
+func SortLocations(loc []tgtv1alpha1.SecretInStoreRef) {
+	slices.SortFunc(loc, func(a, b tgtv1alpha1.SecretInStoreRef) int {
 		aIdx := fmt.Sprintf("%s.%s", a.RemoteRef.Key, a.RemoteRef.Property)
 		if a.RemoteRef.Property == "" {
 			aIdx = a.RemoteRef.Key
@@ -187,17 +199,4 @@ func getNameFor(keys []tgtv1alpha1.SecretInStoreRef) string {
 		}
 		return strings.Compare(aIdx, bIdx)
 	})
-	return sanitize(keys[0])
-}
-
-func sanitize(ref tgtv1alpha1.SecretInStoreRef) string {
-	cleanedName := strings.ToLower(ref.Name)
-	cleanedKind := strings.ToLower(ref.Kind)
-	cleanedKey := strings.TrimSuffix(strings.TrimPrefix(ref.RemoteRef.Key, "/"), "/")
-	ans := cleanedKind + "." + cleanedName + "." + cleanedKey
-	if ref.RemoteRef.Property != "" {
-		cleanedProperty := strings.TrimSuffix(strings.TrimPrefix(ref.RemoteRef.Property, "/"), "/")
-		ans += "." + cleanedProperty
-	}
-	return strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(ans, "_", "-"), "/", "-"), ":", "-"))
 }
