@@ -105,8 +105,14 @@ func (j *JobRunner) Run(ctx context.Context) ([]v1alpha1.Finding, []v1alpha1.Con
 		return nil, nil, nil, err
 	}
 
-	j.Logger.V(1).Info("Getting Virtual Machine Targets")
+	j.Logger.V(1).Info("Getting Github Repository Targets")
 	err = j.scanGithubRepositoryTargets(ctx, secretValues)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	j.Logger.V(1).Info("Getting Kubernetes Cluster Targets")
+	err = j.scanKubernetesClusterTargets(ctx, secretValues)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -159,19 +165,40 @@ func (j JobRunner) scanVirtualMachineTargets(ctx context.Context) error {
 }
 
 func (j JobRunner) scanGithubRepositoryTargets(ctx context.Context, secretValues map[string]struct{}) error {
-	ghTargets := &tgtv1alpha1.GithubRepositoryList{}
-	if err := j.Client.List(ctx, ghTargets, client.InNamespace(j.Namespace)); err != nil {
+	list := &tgtv1alpha1.GithubRepositoryList{}
+	return j.scanTargets(ctx, list, func() []client.Object {
+		objs := make([]client.Object, len(list.Items))
+		for i := range list.Items {
+			objs[i] = &list.Items[i] // pointer to each item
+		}
+		return objs
+	}, secretValues)
+}
+
+func (j JobRunner) scanKubernetesClusterTargets(ctx context.Context, secretValues map[string]struct{}) error {
+	list := &tgtv1alpha1.KubernetesClusterList{}
+	return j.scanTargets(ctx, list, func() []client.Object {
+		objs := make([]client.Object, len(list.Items))
+		for i := range list.Items {
+			objs[i] = &list.Items[i]
+		}
+		return objs
+	}, secretValues)
+}
+
+func (j JobRunner) scanTargets(ctx context.Context, list client.ObjectList, getObjs func() []client.Object, secretValues map[string]struct{}) error {
+	if err := j.Client.List(ctx, list, client.InNamespace(j.Namespace)); err != nil {
 		return err
 	}
-	for _, target := range ghTargets.Items {
+	for _, target := range getObjs() {
 		j.Logger.V(1).Info("Scanning target", "target", target.GetName())
-		prov, ok := tgtv1alpha1.GetTargetByName(target.GroupVersionKind().Kind)
+		prov, ok := tgtv1alpha1.GetTargetByName(target.GetObjectKind().GroupVersionKind().Kind)
 		if !ok {
 			err := fmt.Errorf("target kind %q not supported", target.GetObjectKind().GroupVersionKind().Kind)
 			j.Logger.Error(err, "failed to create new client for target", "target", target.GetName())
 			continue
 		}
-		client, err := prov.NewClient(ctx, j.Client, &target)
+		client, err := prov.NewClient(ctx, j.Client, target)
 		if err != nil {
 			j.Logger.Error(err, "failed create new client for target", "target", target.GetName())
 			continue
@@ -217,6 +244,17 @@ func (j *JobRunner) attributeConsumers(ctx context.Context, findings []v1alpha1.
 		return err
 	}
 	for _, target := range ghTargets.Items {
+		kind := target.GroupVersionKind().Kind
+		if err := j.attributeTargetConsumers(ctx, kind, target.GetName(), &target, locationsPerKindMap[kind]); err != nil {
+			j.Logger.Error(err, "failed to attribute consumers on GitHub target", "target", target.GetName())
+		}
+	}
+
+	kubernetesTargets := &tgtv1alpha1.KubernetesClusterList{}
+	if err := j.Client.List(ctx, kubernetesTargets, client.InNamespace(j.Namespace)); err != nil {
+		return err
+	}
+	for _, target := range kubernetesTargets.Items {
 		kind := target.GroupVersionKind().Kind
 		if err := j.attributeTargetConsumers(ctx, kind, target.GetName(), &target, locationsPerKindMap[kind]); err != nil {
 			j.Logger.Error(err, "failed to attribute consumers on GitHub target", "target", target.GetName())

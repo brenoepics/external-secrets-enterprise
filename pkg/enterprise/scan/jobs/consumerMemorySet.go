@@ -1,20 +1,11 @@
-// /*
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// */
+// Copyright External Secrets Inc. 2025
+// All Rights Reserved
 
 package job
 
 import (
+	"slices"
+	"strings"
 	"sync"
 
 	"github.com/external-secrets/external-secrets/apis/enterprise/scan/v1alpha1"
@@ -68,7 +59,7 @@ func (cs *ConsumerMemorySet) Add(target v1alpha1.TargetReference, f tgtv1alpha1.
 			},
 			status: v1alpha1.ConsumerStatus{},
 		}
-		FillUnionFromAttributes(&acc.spec, f.Kind, f.Attributes)
+		FillAttributes(acc, f.Kind, f.Attributes)
 		cs.accums[key] = acc
 	}
 
@@ -90,6 +81,12 @@ func (cs *ConsumerMemorySet) List() []v1alpha1.Consumer {
 	out := make([]v1alpha1.Consumer, 0, len(cs.accums))
 	for _, acc := range cs.accums {
 		SortLocations(acc.status.Locations)
+		slices.SortFunc(acc.status.Pods, func(a, b v1alpha1.K8sPodItem) int {
+			if a.UID == b.UID {
+				return strings.Compare(a.Name, b.Name)
+			}
+			return strings.Compare(a.UID, b.UID)
+		})
 		out = append(out, v1alpha1.Consumer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: acc.spec.ID,
