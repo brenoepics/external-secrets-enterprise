@@ -4,7 +4,7 @@ should match snapshot of default values:
     kind: CustomResourceDefinition
     metadata:
       annotations:
-        controller-gen.kubebuilder.io/version: v0.18.0
+        controller-gen.kubebuilder.io/version: v0.19.0
       labels:
         external-secrets.io/component: controller
       name: secretstores.external-secrets.io
@@ -4915,7 +4915,7 @@ should match snapshot of default values:
                               description: Yandex.Cloud API endpoint (e.g. 'api.cloud.yandex.net:443')
                               type: string
                             auth:
-                              description: Auth defines the information necessary to authenticate against Yandex Certificate Manager
+                              description: Auth defines the information necessary to authenticate against Yandex.Cloud
                               properties:
                                 authorizedKeySecretRef:
                                   description: The authorized key used for authentication
@@ -4986,7 +4986,7 @@ should match snapshot of default values:
                               description: Yandex.Cloud API endpoint (e.g. 'api.cloud.yandex.net:443')
                               type: string
                             auth:
-                              description: Auth defines the information necessary to authenticate against Yandex Lockbox
+                              description: Auth defines the information necessary to authenticate against Yandex.Cloud
                               properties:
                                 authorizedKeySecretRef:
                                   description: The authorized key used for authentication
