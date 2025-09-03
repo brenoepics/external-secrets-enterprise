@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
+	tgtv1alpha1 "github.com/external-secrets/external-secrets/apis/enterprise/targets/v1alpha1"
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	ctrlmetrics "github.com/external-secrets/external-secrets/pkg/controllers/metrics"
 	"github.com/external-secrets/external-secrets/pkg/controllers/secretstore"
@@ -25,11 +26,6 @@ import (
 	// Loading registered providers.
 	_ "github.com/external-secrets/external-secrets/pkg/enterprise/provider/register"
 	_ "github.com/external-secrets/external-secrets/pkg/provider/register"
-)
-
-const (
-	TargetGroup   = "target.external-secrets.io"
-	TargetVersion = "v1alpha1"
 )
 
 // TargetReconciler reconciles a Target object.
@@ -85,7 +81,7 @@ func (r *TargetReconciler) SetupWithManager(mgr ctrl.Manager, obj client.Object,
 }
 
 func BuildTargetObject(scheme *runtime.Scheme, kind string) (esv1.GenericStore, error) {
-	gvk := schema.GroupVersionKind{Group: TargetGroup, Version: TargetVersion, Kind: kind}
+	gvk := schema.GroupVersionKind{Group: tgtv1alpha1.Group, Version: tgtv1alpha1.Version, Kind: kind}
 	obj, err := scheme.New(gvk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create object %v: %w", gvk, err)
