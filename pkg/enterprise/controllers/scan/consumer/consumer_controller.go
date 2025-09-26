@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,12 +24,19 @@ import (
 	"github.com/external-secrets/external-secrets/apis/enterprise/scan/v1alpha1"
 	scanv1alpha1 "github.com/external-secrets/external-secrets/apis/enterprise/scan/v1alpha1"
 	targetv1alpha1 "github.com/external-secrets/external-secrets/apis/enterprise/targets/v1alpha1"
+	"github.com/go-logr/logr"
 )
 
 type ConsumerController struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+}
+
+type Health struct {
+	Healthy bool
+	Reason  string
+	Message string
 }
 
 func (c *ConsumerController) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
@@ -67,7 +76,7 @@ func (c *ConsumerController) SetupWithManager(mgr ctrl.Manager, opts controller.
 		Complete(c)
 }
 
-func (c *ConsumerController) CheckConsumerStatus(ctx context.Context, consumer *scanv1alpha1.Consumer, pushSecretIndex map[string][]targetv1alpha1.SecretUpdateRecord) (ctrl.Result, error) {
+func (c *ConsumerController) CheckConsumerStatus(ctx context.Context, consumer *scanv1alpha1.Consumer, pushSecretIndex map[string][]scanv1alpha1.SecretUpdateRecord) (ctrl.Result, error) {
 	consumerStatusCondition := metav1.ConditionTrue
 	consumerStatusReason := scanv1alpha1.ConsumerLocationsUpToDate
 	consumerStatusMessage := "All observed locations are up to date"
@@ -94,12 +103,16 @@ func (c *ConsumerController) CheckConsumerStatus(ctx context.Context, consumer *
 		consumerStatusMessage = fmt.Sprint("Observed locations out of date: ", strings.Join(locationsOutOfDateMessages, "; "))
 	}
 
-	for _, pod := range consumer.Status.Pods {
-		if (!pod.Ready && pod.Phase != "Succeeded") || (pod.Phase != "Running" && pod.Phase != "Succeeded") {
+	if consumer.Spec.Attributes.K8sWorkload != nil {
+		health, err := CheckWorkloadHealth(ctx, c.Client, consumer.Spec.Attributes.K8sWorkload)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error checking workload health: %w", err)
+		}
+
+		if !health.Healthy {
 			consumerStatusCondition = metav1.ConditionFalse
-			consumerStatusReason = scanv1alpha1.ConsumerPodsNotReady
-			consumerStatusMessage = "Not all pods related to this consumer are working properly"
-			break
+			consumerStatusReason = health.Reason
+			consumerStatusMessage = health.Message
 		}
 	}
 
@@ -121,4 +134,168 @@ func (c *ConsumerController) CheckConsumerStatus(ctx context.Context, consumer *
 	}
 
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
+}
+
+func CheckWorkloadHealth(ctx context.Context, client client.Client, wl *scanv1alpha1.K8sWorkloadSpec) (Health, error) {
+	switch wl.WorkloadKind {
+	case "Deployment":
+		var obj appsv1.Deployment
+		if err := client.Get(ctx, namespacedName(wl), &obj); err != nil {
+			return Health{}, err
+		}
+		return deploymentHealth(&obj), nil
+	case "ReplicaSet":
+		var obj appsv1.ReplicaSet
+		if err := client.Get(ctx, namespacedName(wl), &obj); err != nil {
+			return Health{}, err
+		}
+		return replicasetHealth(&obj), nil
+	case "StatefulSet":
+		var obj appsv1.StatefulSet
+		if err := client.Get(ctx, namespacedName(wl), &obj); err != nil {
+			return Health{}, err
+		}
+		return statefulsetHealth(&obj), nil
+	case "DaemonSet":
+		var obj appsv1.DaemonSet
+		if err := client.Get(ctx, namespacedName(wl), &obj); err != nil {
+			return Health{}, err
+		}
+		return daemonsetHealth(&obj), nil
+	case "Job":
+		var obj batchv1.Job
+		if err := client.Get(ctx, namespacedName(wl), &obj); err != nil {
+			return Health{}, err
+		}
+		return jobHealth(&obj), nil
+	default:
+		return Health{}, fmt.Errorf("unsupported kind %q (group=%s version=%s)", wl.WorkloadKind, wl.WorkloadGroup, wl.WorkloadVersion)
+	}
+}
+
+func namespacedName(w *scanv1alpha1.K8sWorkloadSpec) types.NamespacedName {
+	return types.NamespacedName{Namespace: w.Namespace, Name: w.WorkloadName}
+}
+
+func deploymentHealth(d *appsv1.Deployment) Health {
+	genOK := d.Status.ObservedGeneration >= d.Generation
+	avail := getCond(d.Status.Conditions, appsv1.DeploymentAvailable)
+	prog := getCond(d.Status.Conditions, appsv1.DeploymentProgressing)
+
+	ready := d.Status.ReadyReplicas
+	replicas := d.Status.Replicas
+	updated := d.Status.UpdatedReplicas
+
+	missingReady := int32(0)
+	if replicas > ready {
+		missingReady = replicas - ready
+	}
+	outdated := int32(0)
+	if replicas > updated {
+		outdated = replicas - updated
+	}
+
+	healthy := genOK && ready == replicas && updated == replicas && avail == corev1.ConditionTrue && prog == corev1.ConditionTrue
+
+	reason := scanv1alpha1.ConsumerWorkloadReady
+	msg := "Deployment healthy"
+	if !healthy {
+		reason, msg = scanv1alpha1.ConsumerWorkloadNotReady,
+			fmt.Sprintf(
+				"Deployment %s/%s: generation(observed=%d desired=%d): %t, ready=%d/%d (missing=%d), updated=%d/%d (outdated=%d), Available=%s, Progressing=%s",
+				d.Namespace, d.Name, d.Status.ObservedGeneration, d.Generation,
+				genOK, d.Status.ReadyReplicas, d.Status.Replicas, missingReady,
+				updated, replicas, outdated, avail, prog,
+			)
+	}
+	return Health{Healthy: healthy, Reason: reason, Message: msg}
+}
+
+func replicasetHealth(rs *appsv1.ReplicaSet) Health {
+	readyEq := rs.Status.ReadyReplicas == rs.Status.Replicas
+	healthy := readyEq
+	reason := scanv1alpha1.ConsumerWorkloadReady
+	msg := "Replicaset healthy"
+	if !healthy {
+		reason, msg = scanv1alpha1.ConsumerWorkloadNotReady,
+			fmt.Sprintf(
+				"Replicaset %s/%s: ready=%d replicas=%d",
+				rs.Namespace, rs.Name, rs.Status.ReadyReplicas, rs.Status.Replicas,
+			)
+	}
+	return Health{Healthy: healthy, Reason: reason, Message: msg}
+}
+
+func statefulsetHealth(sts *appsv1.StatefulSet) Health {
+	genOK := sts.Status.ObservedGeneration >= sts.Generation
+	readyEq := sts.Status.ReadyReplicas == sts.Status.Replicas
+	healthy := genOK && readyEq
+	reason := scanv1alpha1.ConsumerWorkloadReady
+	msg := "Statefulset healthy"
+	if !healthy {
+		reason, msg = scanv1alpha1.ConsumerWorkloadNotReady,
+			fmt.Sprintf(
+				"Statefulset %s/%s: generation(observed=%d desired=%d)=%t ready=%d/%d",
+				sts.Namespace, sts.Name, sts.Status.ObservedGeneration, sts.Generation,
+				genOK, sts.Status.ReadyReplicas, sts.Status.Replicas,
+			)
+	}
+	return Health{Healthy: healthy, Reason: reason, Message: msg}
+}
+
+func daemonsetHealth(ds *appsv1.DaemonSet) Health {
+	genOK := ds.Status.ObservedGeneration >= ds.Generation
+	readyEq := ds.Status.NumberReady == ds.Status.DesiredNumberScheduled
+	updatedEq := ds.Status.UpdatedNumberScheduled == ds.Status.DesiredNumberScheduled
+	healthy := genOK && readyEq && updatedEq
+	reason := scanv1alpha1.ConsumerWorkloadReady
+	msg := "Daemonset healthy"
+	if !healthy {
+		reason, msg = scanv1alpha1.ConsumerWorkloadNotReady,
+			fmt.Sprintf(
+				"Daemonset %s/%s: generation(observed=%d desired=%d)=%t ready=%d/%d updated=%d",
+				ds.Namespace, ds.Name, ds.Status.ObservedGeneration, ds.Generation,
+				genOK, ds.Status.NumberReady, ds.Status.DesiredNumberScheduled, ds.Status.UpdatedNumberScheduled,
+			)
+	}
+	return Health{Healthy: healthy, Reason: reason, Message: msg}
+}
+
+func jobHealth(j *batchv1.Job) Health {
+	want := int32(1)
+	if j.Spec.Completions != nil {
+		want = *j.Spec.Completions
+	}
+	succeeded := j.Status.Succeeded
+	failed := j.Status.Failed
+	backoff := int32(6)
+	if j.Spec.BackoffLimit != nil {
+		backoff = *j.Spec.BackoffLimit
+	}
+	healthy := succeeded >= want
+	reason := scanv1alpha1.ConsumerWorkloadReady
+	msg := "Job completed"
+	if !healthy {
+		if failed > backoff {
+			reason, msg = "Failed", fmt.Sprintf(
+				"Job %s/%s: failed=%d backoffLimit=%d",
+				j.Namespace, j.Name, failed, backoff,
+			)
+		} else {
+			reason, msg = "Running", fmt.Sprintf(
+				"Job %s/%s: succeeded=%d/%d active=%d failed=%d",
+				j.Namespace, j.Name, succeeded, want, j.Status.Active, failed,
+			)
+		}
+	}
+	return Health{Healthy: healthy, Reason: reason, Message: msg}
+}
+
+func getCond(conds []appsv1.DeploymentCondition, t appsv1.DeploymentConditionType) corev1.ConditionStatus {
+	for _, c := range conds {
+		if c.Type == t {
+			return c.Status
+		}
+	}
+	return corev1.ConditionUnknown
 }

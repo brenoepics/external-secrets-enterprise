@@ -78,7 +78,7 @@ func (s *ScanTarget) PushSecret(ctx context.Context, secret *corev1.Secret, remo
 		}
 		cur := destination.Data[dataKey]
 		if bytes.Equal(cur, newVal) {
-			return nil
+			break
 		}
 		destination.Data[dataKey] = append([]byte(nil), newVal...)
 
@@ -89,7 +89,8 @@ func (s *ScanTarget) PushSecret(ctx context.Context, secret *corev1.Secret, remo
 		break
 	}
 
-	err = targets.UpdateTargetPushIndex(ctx, tgtv1alpha1.KubernetesTargetKind, s.KubeClient, s.Name, s.Namespace, remoteKey, dataKey, targets.Hash(newVal))
+	newHash := targets.Hash(newVal)
+	err = targets.UpdateTargetPushIndex(ctx, tgtv1alpha1.KubernetesTargetKind, s.KubeClient, s.Name, s.Namespace, remoteKey, dataKey, newHash)
 	if err != nil {
 		return fmt.Errorf("error updating target status: %w", err)
 	}
