@@ -412,8 +412,10 @@ func (c *JobController) UpdateFindings(ctx context.Context, findings []v1alpha1.
 		f := &findings[i]
 		newFindingsByHash[f.Spec.Hash] = f
 	}
-
-	assigned := utils.AssignIDs(currentFindings.Items, findings, utils.JaccardParams{MinJaccard: 0.7, MinIntersection: 2})
+	// 2 out of 3 should be a match. This gives a jaccard index of 2/3
+	// Thus we set the mininum to be a little bit lower than that.
+	params := utils.JaccardParams{MinJaccard: 0.6, MinIntersection: 2}
+	assigned := utils.AssignIDs(currentFindings.Items, findings, params)
 	seenIDs := make(map[string]struct{}, len(assigned))
 
 	for i, assignedFinding := range assigned {
@@ -456,9 +458,10 @@ func (c *JobController) UpdateFindings(ctx context.Context, findings []v1alpha1.
 	for id, currentFinding := range currentFindingsByID {
 		if _, ok := seenIDs[id]; !ok {
 			c.Log.V(1).Info("Deleting stale finding (not observed this run)", "id", id, "name", currentFinding.GetName())
-			if err := c.Delete(ctx, currentFinding); err != nil {
-				return v1alpha1.JobRunStatusFailed, metav1.Now(), err
-			}
+			// TODO - Fix this nasty concurrency bug
+			// if err := c.Delete(ctx, currentFinding); err != nil {
+			// 	return v1alpha1.JobRunStatusFailed, metav1.Now(), err
+			// }
 		}
 	}
 
