@@ -23,7 +23,7 @@ import (
 
 // Package type metadata.
 const (
-	Group   = "federation.external-secrets.io"
+	Group   = "identity.federation.external-secrets.io"
 	Version = "v1alpha1"
 )
 
@@ -36,14 +36,23 @@ var (
 	AddToScheme   = SchemeBuilder.AddToScheme
 )
 
-// Authorization type metadata.
+// KubernetesFederation type metadata.
 var (
-	AuthorizationKind             = reflect.TypeOf(Authorization{}).Name()
-	AuthorizationGroupKind        = schema.GroupKind{Group: Group, Kind: AuthorizationKind}.String()
-	AuthorizationKindAPIVersion   = AuthorizationKind + "." + SchemeGroupVersion.String()
-	AuthorizationGroupVersionKind = SchemeGroupVersion.WithKind(AuthorizationKind)
+	KubernetesFederationKind             = reflect.TypeOf(KubernetesFederation{}).Name()
+	KubernetesFederationGroupKind        = schema.GroupKind{Group: Group, Kind: KubernetesFederationKind}.String()
+	KubernetesFederationKindAPIVersion   = KubernetesFederationKind + "." + SchemeGroupVersion.String()
+	KubernetesFederationGroupVersionKind = SchemeGroupVersion.WithKind(KubernetesFederationKind)
+)
+
+// SpiffeFederation type metadata.
+var (
+	SpiffeFederationKind             = reflect.TypeOf(SpiffeFederation{}).Name()
+	SpiffeFederationGroupKind        = schema.GroupKind{Group: Group, Kind: SpiffeFederationKind}.String()
+	SpiffeFederationKindAPIVersion   = SpiffeFederationKind + "." + SchemeGroupVersion.String()
+	SpiffeFederationGroupVersionKind = SchemeGroupVersion.WithKind(SpiffeFederationKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&Authorization{}, &AuthorizationList{})
+	SchemeBuilder.Register(&KubernetesFederation{}, &KubernetesFederationList{})
+	SchemeBuilder.Register(&SpiffeFederation{}, &SpiffeFederationList{})
 }
