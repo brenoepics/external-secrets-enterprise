@@ -5,6 +5,8 @@ package steps
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -107,11 +109,16 @@ func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf
 
 	// Handle generator state
 	if e.Step.AutoCleanup {
+		var statefulResource genv1alpha1.StatefulResource
 		runTemplate, err := getWorkflowRunTemplateFromWorkflow(ctx, e.Client, wf)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			statefulResource = runTemplate
+		} else {
+			statefulResource = wf
+			log.Error(err, "error getting workflow run template")
 		}
-		generatorState := statemanager.New(ctx, e.Client, e.Scheme, namespace, runTemplate)
+
+		generatorState := statemanager.New(ctx, e.Client, e.Scheme, namespace, statefulResource)
 		defer func() {
 			if err != nil {
 				if err := generatorState.Rollback(); err != nil {
@@ -130,9 +137,10 @@ func (e *GeneratorStepExecutor) Execute(ctx context.Context, c client.Client, wf
 		}
 		generatorState.SetCleanupPolicy(cleanupPolicy)
 
-		genStateKey := fmt.Sprintf("%s.%s.%s", wf.Namespace, runTemplate.Name, jobName)
+		genStateKey := fmt.Sprintf("%s.%s.%s.%s", statefulResource.GetObjectKind().GroupVersionKind().String(), wf.Namespace, statefulResource.GetName(), jobName)
+		hash := sha512.Sum512([]byte(genStateKey))
 		if generatorState != nil {
-			generatorState.EnqueueCreateState(genStateKey, namespace, obj, gen, newGenState)
+			generatorState.EnqueueCreateState(hex.EncodeToString(hash[:]), namespace, obj, gen, newGenState)
 		}
 	}
 
