@@ -27,6 +27,21 @@ import (
 	store "github.com/external-secrets/external-secrets/pkg/enterprise/federation/store"
 )
 
+const testState = "test-state"
+
+// setAuthContext sets both authInfo and workloadInfo in the echo context (simulating middleware behavior).
+func setAuthContext(c echo.Context, authInfo *auth.AuthInfo) {
+	c.Set("authInfo", authInfo)
+	if authInfo.KubeAttributes != nil {
+		workloadInfo := &auth.WorkloadInfo{
+			Namespace:      authInfo.KubeAttributes.Namespace,
+			ServiceAccount: authInfo.KubeAttributes.ServiceAccount,
+			Pod:            authInfo.KubeAttributes.Pod,
+		}
+		c.Set("workloadInfo", workloadInfo)
+	}
+}
+
 type GenerateSecretsTestSuite struct {
 	suite.Suite
 	server *ServerHandler
@@ -145,7 +160,7 @@ func (s *GenerateSecretsTestSuite) TestResourcePopulationFromClaims() {
 				s.Equal(generatorName, genName)
 				s.Equal(generatorKind, genKind)
 				s.Equal(generatorNamespace, genNamespace)
-				return map[string]string{"secretKey": "secretValue"}, "test-state", "test-namespace", nil
+				return map[string]string{"secretKey": "secretValue"}, testState, "test-namespace", nil
 			}
 			s.T().Cleanup(func() { s.server.generateSecretFn = originalGenerateSecretFn })
 
@@ -157,7 +172,7 @@ func (s *GenerateSecretsTestSuite) TestResourcePopulationFromClaims() {
 			c := e.NewContext(req, rec)
 			c.SetParamNames("generatorName", "generatorKind", "generatorNamespace")
 			c.SetParamValues(generatorName, generatorKind, generatorNamespace)
-			c.Set("authInfo", tt.authInfo)
+			setAuthContext(c, tt.authInfo)
 
 			// Call the handler s.server.generateSecrets
 			err := s.server.generateSecrets(c)
@@ -348,7 +363,7 @@ func (s *GenerateSecretsTestSuite) TestRevokeSelf() {
 			c := e.NewContext(req, rec)
 			c.SetParamNames("generatorNamespace", "generatorName", "generatorKind")
 			c.SetParamValues(testGeneratorNS, testGeneratorName, testGeneratorKind)
-			c.Set("authInfo", tt.authInfo)
+			setAuthContext(c, tt.authInfo)
 
 			// Call the handler (revokeSelf)
 			handlerErr := s.server.revokeSelf(c) // processRequest is called internally and is NOT mocked
@@ -431,7 +446,7 @@ func (s *GenerateSecretsTestSuite) TestRevokeSelfHappyPath() {
 		c := e.NewContext(req, rec)
 		c.SetParamNames("generatorNamespace", "generatorName", "generatorKind")
 		c.SetParamValues(testGeneratorNS, testGeneratorName, testGeneratorKind)
-		c.Set("authInfo", authInfo)
+		setAuthContext(c, authInfo)
 
 		// 4. Call the handler (revokeSelf)
 		// processRequest is called internally by revokeSelf and is NOT mocked here.
@@ -494,7 +509,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 				// Set path parameters
 				c.SetParamNames("generatorName", "generatorKind", "generatorNamespace")
 				c.SetParamValues("test-generator", "test-kind", testNamespace)
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -534,7 +549,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 				return map[string]string{
 					"key1": "value1",
 					"key2": "value2",
-				}, "test-state", testNamespace, nil
+				}, testState, testNamespace, nil
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "{\"key1\":\"value1\",\"key2\":\"value2\"}",
@@ -552,7 +567,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 				// Set path parameters with non-matching values
 				c.SetParamNames("generatorName", "generatorKind", "generatorNamespace")
 				c.SetParamValues("wrong-generator", "wrong-kind", "wrong-namespace")
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -603,7 +618,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 				// Set path parameters
 				c.SetParamNames("generatorName", "generatorKind", "generatorNamespace")
 				c.SetParamValues("test-generator", "test-kind", testNamespace)
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -641,7 +656,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 			expectedBody:   "error generating secret",
 		},
 		{
-			name: "error missing kubernetes attributes",
+			name: "success with OAuth2 auth (no kubernetes attributes)",
 			setup: func() echo.Context {
 				// Create a mock Echo context
 				e := echo.New()
@@ -658,8 +673,9 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 					Method:   "oidc",
 					Provider: testIssuer,
 					Subject:  testSubject,
+					// No KubeAttributes - OAuth2 auth
 				}
-				c.Set("authInfo", customAuthInfo)
+				setAuthContext(c, customAuthInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -691,15 +707,21 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 				return c
 			},
 			mockGenSecret: func(ctx context.Context, generatorName string, generatorKind string, namespace string, resource *Resource) (map[string]string, string, string, error) {
-				// This should not be called
-				s.T().Fatalf("mockGenSecret should not be called in this test case")
-				return nil, "", "", nil
+				// Verify resource attributes for OAuth2 auth
+				s.Assert().Equal("oidc", resource.AuthMethod)
+				s.Assert().Equal(testSubject, resource.Owner)
+				s.Assert().Equal(testIssuer, resource.OwnerAttributes["issuer"])
+				s.Assert().Equal(testSubject, resource.OwnerAttributes["subject"])
+				s.Assert().Equal("oidc", resource.OwnerAttributes["method"])
+				return map[string]string{
+					"password": "generated-oauth2-password",
+				}, testState, testNamespace, nil
 			},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   "missing kubernetes attributes",
+			expectedStatus: http.StatusOK,
+			expectedBody:   "{\"password\":\"generated-oauth2-password\"}",
 		},
 		{
-			name: "error missing kubernetes attributes",
+			name: "error missing kubernetes service account",
 			setup: func() echo.Context {
 				// Create a mock Echo context
 				e := echo.New()
@@ -720,7 +742,7 @@ func (s *GenerateSecretsTestSuite) TestGenerateSecrets() {
 						Namespace: testNamespace,
 					},
 				}
-				c.Set("authInfo", customAuthInfo)
+				setAuthContext(c, customAuthInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -859,7 +881,7 @@ func (s *GenerateSecretsTestSuite) TestRevokeCredentialsOfHappyPath() {
 		c := e.NewContext(req, rec)
 		c.SetParamNames("generatorNamespace") // revokeCredentialsOf uses this path param
 		c.SetParamValues(testParamGeneratorNS)
-		c.Set("authInfo", authInfo)
+		setAuthContext(c, authInfo)
 
 		// 6. Call the handler
 		handlerErr := s.server.revokeCredentialsOf(c)
@@ -935,7 +957,7 @@ func (s *PostSecretsTestSuite) TestPostSecrets() {
 				// Set path parameters
 				c.SetParamNames("secretStoreName", "secretName")
 				c.SetParamValues("test-store", "test-secret")
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -984,7 +1006,7 @@ func (s *PostSecretsTestSuite) TestPostSecrets() {
 				// Set path parameters with non-matching values
 				c.SetParamNames("secretStoreName", "secretName")
 				c.SetParamValues("wrong-store", "test-secret")
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -1030,7 +1052,7 @@ func (s *PostSecretsTestSuite) TestPostSecrets() {
 				// Set path parameters
 				c.SetParamNames("secretStoreName", "secretName")
 				c.SetParamValues("test-store", "test-secret")
-				c.Set("authInfo", authInfo)
+				setAuthContext(c, authInfo)
 
 				// Setup the server for this test
 				spec := &fedv1alpha1.AuthorizationSpec{
@@ -1334,6 +1356,7 @@ func TestUpsertIdentityConnectionError(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"test-generator",
 		"test-key",
@@ -1391,6 +1414,7 @@ func TestUpsertIdentityCreateNew(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"test-generator",
 		"test-key",
@@ -1482,6 +1506,7 @@ func TestUpsertIdentityUpdateWithNewCredential(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"new-generator",
 		"test-key",
@@ -1597,10 +1622,18 @@ func TestUpsertIdentityUpdateExistingCredential(t *testing.T) {
 		Name: "test-federation",
 	}
 
+	// Create workloadInfo from authInfo (same workload as existing credential)
+	workloadInfo := &auth.WorkloadInfo{
+		Namespace:      authInfo.KubeAttributes.Namespace,
+		ServiceAccount: authInfo.KubeAttributes.ServiceAccount,
+		Pod:            authInfo.KubeAttributes.Pod,
+	}
+
 	// Call upsertIdentity with the same generator, key, and workload (should update, not append)
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		workloadInfo,
 		federationRef,
 		"test-generator",
 		"same-key",
@@ -1672,6 +1705,7 @@ func TestUpsertIdentityCreateError(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"test-generator",
 		"test-key",
@@ -1736,6 +1770,7 @@ func TestUpsertIdentityUpdateError(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"test-generator",
 		"test-key",
@@ -1784,6 +1819,7 @@ func TestUpsertIdentityNilReconciler(t *testing.T) {
 	err := server.upsertIdentity(
 		ctx,
 		authInfo,
+		nil, // workloadInfo
 		federationRef,
 		"test-generator",
 		"test-key",
