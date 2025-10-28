@@ -30,33 +30,31 @@ import (
 )
 
 const (
-	// Default clock skew leeway (2 minutes as recommended by Okta).
-	defaultClockSkewLeeway = 2 * time.Minute
+	// Default clock skew leeway (2 minutes as recommended by OAuth 2.0 spec).
+	defaultPingIdentityClockSkewLeeway = 2 * time.Minute
 )
 
-// OktaClaims represents the claims in an Okta access token.
-type OktaClaims struct {
+// PingIdentityClaims represents the claims in a PingOne access token.
+type PingIdentityClaims struct {
 	jwt.RegisteredClaims
-	Version   int      `json:"ver,omitempty"`
-	ClientID  string   `json:"cid,omitempty"`
-	UserID    string   `json:"uid,omitempty"`
-	Scopes    []string `json:"scp,omitempty"`
-	TokenType string   `json:"token_type,omitempty"`
+	ClientID string   `json:"client_id,omitempty"`
+	Scope    string   `json:"scope,omitempty"`
+	Scopes   []string `json:"scopes,omitempty"`
 }
 
-type OktaAuthenticator struct {
+type PingIdentityAuthenticator struct {
 	mu              sync.RWMutex
 	clockSkewLeeway time.Duration
 }
 
-func NewOktaAuthenticator() *OktaAuthenticator {
-	return &OktaAuthenticator{
+func NewPingIdentityAuthenticator() *PingIdentityAuthenticator {
+	return &PingIdentityAuthenticator{
 		mu:              sync.RWMutex{},
-		clockSkewLeeway: defaultClockSkewLeeway,
+		clockSkewLeeway: defaultPingIdentityClockSkewLeeway,
 	}
 }
 
-func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
+func (a *PingIdentityAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 	// Extract Bearer token from Authorization header
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -74,12 +72,12 @@ func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 
 	// Parse token without validation first to extract issuer
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
-	token, _, err := parser.ParseUnverified(tokenString, &OktaClaims{})
+	token, _, err := parser.ParseUnverified(tokenString, &PingIdentityClaims{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	claims, ok := token.Claims.(*OktaClaims)
+	claims, ok := token.Claims.(*PingIdentityClaims)
 	if !ok {
 		return nil, errors.New("invalid token claims format")
 	}
@@ -102,7 +100,7 @@ func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 	}
 
 	// Parse and validate token with proper signature verification
-	validatedToken, err := jwt.ParseWithClaims(tokenString, &OktaClaims{}, a.keyFunc(jwks))
+	validatedToken, err := jwt.ParseWithClaims(tokenString, &PingIdentityClaims{}, a.keyFunc(jwks))
 	if err != nil {
 		return nil, fmt.Errorf("token validation failed: %w", err)
 	}
@@ -111,7 +109,7 @@ func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 		return nil, errors.New("invalid token")
 	}
 
-	validatedClaims, ok := validatedToken.Claims.(*OktaClaims)
+	validatedClaims, ok := validatedToken.Claims.(*PingIdentityClaims)
 	if !ok {
 		return nil, errors.New("invalid token claims after validation")
 	}
@@ -121,15 +119,20 @@ func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 		return nil, err
 	}
 
-	// Extract subject - for client credentials flow, sub equals cid
+	// Extract subject - for client credentials flow, use client_id if sub is not present
 	subject, err := validatedClaims.GetSubject()
 	if err != nil || subject == "" {
-		return nil, errors.New("token missing subject claim")
+		// Fall back to client_id for client credentials grant
+		if validatedClaims.ClientID != "" {
+			subject = validatedClaims.ClientID
+		} else {
+			return nil, errors.New("token missing both subject and client_id claims")
+		}
 	}
 
 	// Build AuthInfo
 	authInfo := &AuthInfo{
-		Method:   "okta",
+		Method:   "pingidentity",
 		Provider: issuer,
 		Subject:  subject,
 		// KubeAttributes will be nil for now - to be implemented in future
@@ -140,7 +143,7 @@ func (a *OktaAuthenticator) Authenticate(r *http.Request) (*AuthInfo, error) {
 }
 
 // keyFunc returns a function that looks up the signing key from JWKS.
-func (a *OktaAuthenticator) keyFunc(jwks map[string]map[string]string) jwt.Keyfunc {
+func (a *PingIdentityAuthenticator) keyFunc(jwks map[string]map[string]string) jwt.Keyfunc {
 	return func(token *jwt.Token) (interface{}, error) {
 		// Verify the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -160,12 +163,12 @@ func (a *OktaAuthenticator) keyFunc(jwks map[string]map[string]string) jwt.Keyfu
 		}
 
 		// Parse RSA public key from JWK
-		return parseRSAPublicKeyFromJWK(key)
+		return parseRSAPublicKeyFromJWKPingIdentity(key)
 	}
 }
 
 // verifyExpiration checks token expiration with clock skew leeway.
-func (a *OktaAuthenticator) verifyExpiration(claims *OktaClaims) error {
+func (a *PingIdentityAuthenticator) verifyExpiration(claims *PingIdentityClaims) error {
 	if claims.ExpiresAt == nil {
 		return errors.New("token missing expiration claim")
 	}
@@ -180,8 +183,8 @@ func (a *OktaAuthenticator) verifyExpiration(claims *OktaClaims) error {
 	return nil
 }
 
-// parseRSAPublicKeyFromJWK parses an RSA public key from a JWK map.
-func parseRSAPublicKeyFromJWK(key map[string]string) (*rsa.PublicKey, error) {
+// parseRSAPublicKeyFromJWKPingIdentity parses an RSA public key from a JWK map.
+func parseRSAPublicKeyFromJWKPingIdentity(key map[string]string) (*rsa.PublicKey, error) {
 	// Get modulus (n)
 	nVal, ok := key["n"]
 	if !ok {
@@ -224,5 +227,5 @@ func parseRSAPublicKeyFromJWK(key map[string]string) (*rsa.PublicKey, error) {
 }
 
 func init() {
-	Register("okta", NewOktaAuthenticator())
+	Register("pingidentity", NewPingIdentityAuthenticator())
 }
