@@ -1,7 +1,22 @@
-// 2025
+// /*
+// Copyright © 2025 ESO Maintainer Team
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// */
+
+// Package provider implements the federation provider.
 // Copyright External Secrets Inc.
 // All Rights Reserved.
-
 package provider
 
 import (
@@ -18,27 +33,27 @@ import (
 
 func TestNewOktaProvider(t *testing.T) {
 	tests := []struct {
-		name              string
-		domain            string
-		authServerID      string
+		name               string
+		domain             string
+		authServerID       string
 		expectedAuthServer string
 	}{
 		{
-			name:              "with custom auth server",
-			domain:            "https://dev-12345.okta.com",
-			authServerID:      "custom",
+			name:               "with custom auth server",
+			domain:             "https://dev-12345.okta.com",
+			authServerID:       "custom",
 			expectedAuthServer: "custom",
 		},
 		{
-			name:              "with empty auth server defaults to default",
-			domain:            "https://dev-12345.okta.com",
-			authServerID:      "",
+			name:               "with empty auth server defaults to default",
+			domain:             "https://dev-12345.okta.com",
+			authServerID:       "",
 			expectedAuthServer: "default",
 		},
 		{
-			name:              "with default auth server",
-			domain:            "https://dev-12345.okta.com",
-			authServerID:      "default",
+			name:               "with default auth server",
+			domain:             "https://dev-12345.okta.com",
+			authServerID:       "default",
 			expectedAuthServer: "default",
 		},
 	}
